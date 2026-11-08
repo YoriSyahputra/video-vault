@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #09090b;
-  --color-surface: #121217;
-  --color-surface-hover: #1c1c24;
-  --color-surface-card: #13131a;
-  --color-accent: #6366f1;
-  --color-accent2: #a855f7;
+  --color-background: #070709;
+  --color-surface: #141110;
+  --color-surface-hover: #1e1917;
+  --color-surface-card: #181412;
+  --color-accent: #22c55e; /* Tactical Army Emerald */
+  --color-accent2: #4ade80; /* Vivid Emerald Light */
+  --color-gold: #fef08a; /* Champagne Platinum */
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -17,12 +18,6 @@
 }
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* FAB Safe Area Clearance: Extra margin from bottom and right to prevent clipping on mobile */
-.fab-safe-bottom {
-  bottom: max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem));
-  right: max(1.5rem, calc(env(safe-area-inset-right, 0px) + 1.25rem));
 }
 
 /* Scrollbar Hiding */
@@ -47,6 +42,12 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 /* Touch & Press States */
 .touch-press {
@@ -65,13 +66,44 @@
   transform: scale(0.98);
 }
 
-/* Subtle Glassmorphism Card Effect */
-.glass-panel {
-  background: rgba(18, 18, 23, 0.72);
+/* =========================================================
+   Apple 1:1 Liquid Glass Styling (visionOS / iOS Glassmorphism)
+   ========================================================= */
+.liquid-glass {
+  background: rgba(22, 19, 17, 0.72);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 16px 0 rgba(255, 255, 255, 0.02),
+    0 12px 36px -4px rgba(0, 0, 0, 0.75);
+}
+
+.liquid-glass-card {
+  background: rgba(24, 20, 18, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 
+    inset 0 1px 0.5px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 12px 0 rgba(255, 255, 255, 0.02),
+    0 8px 30px -4px rgba(0, 0, 0, 0.6);
+}
+.liquid-glass-card:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25),
+    0 12px 35px -4px rgba(0, 0, 0, 0.8),
+    0 0 20px -2px rgba(34, 197, 94, 0.15);
+}
+
+.liquid-glass-pill {
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
 
 /* Ripple */
@@ -150,7 +182,7 @@
   }
 }
 
-/* Ambient Glow Blobs */
+/* Ambient Glow Blobs with Warm Mocha & Army Emerald */
 @keyframes blobDrift1 {
   0%, 100% {
     transform: translate(0, 0) scale(1);
@@ -187,19 +219,82 @@
   animation: floatY 3.2s ease-in-out infinite;
 }
 
-/* FAB Slow Pulse */
-@keyframes pingSlow {
+/* =========================================================
+   3D Realistic Cinematic Vault Intro Animation
+   ========================================================= */
+.intro-perspective-wrap {
+  perspective: 1200px;
+}
+
+@keyframes vault3DRotate {
   0% {
-    transform: scale(1);
-    opacity: 0.4;
+    opacity: 0;
+    transform: translateZ(-160px) rotateX(24deg) rotateY(-28deg) scale(0.85);
   }
-  70%, 100% {
-    transform: scale(1.6);
+  25% {
+    opacity: 1;
+    transform: translateZ(40px) rotateX(8deg) rotateY(12deg) scale(1.04);
+  }
+  60% {
+    transform: translateZ(0px) rotateX(-4deg) rotateY(-6deg) scale(1);
+  }
+  85% {
+    transform: translateZ(20px) rotateX(0deg) rotateY(0deg) scale(1.02);
+  }
+  100% {
+    transform: translateZ(0px) rotateX(0deg) rotateY(0deg) scale(1);
+  }
+}
+
+.animate-vault-3d {
+  transform-style: preserve-3d;
+  animation: vault3DRotate 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sheenSweep {
+  0% {
+    transform: translateX(-120%) rotate(35deg);
+  }
+  100% {
+    transform: translateX(250%) rotate(35deg);
+  }
+}
+.animate-sheen {
+  animation: sheenSweep 2.2s ease-in-out infinite;
+}
+
+@keyframes shockwavePulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.7);
     opacity: 0;
   }
 }
-.animate-ping-slow {
-  animation: pingSlow 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+.animate-shockwave {
+  animation: shockwavePulse 1.9s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes introFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+.intro-dismissing {
+  animation: introFadeOut 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
 
 /* Toast */

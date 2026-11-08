@@ -1,10 +1,11 @@
-# 🎬 VideoVault — Premium Offline Video Vault for Android
+# 🎬 VideoVault — Luxury Offline Video & Notes Vault for Android
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Web-blueviolet?style=for-the-badge&logo=android" alt="Platform Android" />
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Web-22c55e?style=for-the-badge&logo=android" alt="Platform Android" />
+  <img src="https://img.shields.io/badge/Style-Apple%20Liquid%20Glass-fef08a?style=for-the-badge&logo=apple" alt="Apple Liquid Glass" />
   <img src="https://img.shields.io/badge/Stack-Vanilla%20JS%20%2B%20Vite-yellow?style=for-the-badge&logo=javascript" alt="Vanilla JS" />
   <img src="https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-38bdf8?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Database-Dexie.js%20(IndexedDB)-059669?style=for-the-badge" alt="Dexie.js" />
+  <img src="https://img.shields.io/badge/Database-Dexie.js%20v2%20(IndexedDB)-059669?style=for-the-badge" alt="Dexie.js" />
   <img src="https://img.shields.io/badge/Bridge-Capacitor%206%2F7-1192d3?style=for-the-badge&logo=capacitor" alt="Capacitor" />
   <img src="https://img.shields.io/badge/Status-100%25%20Offline-success?style=for-the-badge" alt="Offline Status" />
 </p>
@@ -13,38 +14,43 @@
 
 ## 🌟 Tentang VideoVault
 
-**VideoVault** adalah aplikasi bookmarking dan kurasi video personal mandiri (*standalone APK*) bertema **Deep Dark-Mode Premium** yang dirancang khusus untuk kenyamanan mobile satu tangan (*mobile-first ergonomic*). 
+**VideoVault** adalah aplikasi kurasi video personal dan catatan pribadi mandiri (*standalone APK*) bertema **Apple Liquid Glass & Dark Luxury (Obsidian-Mocha-Army Emerald)** yang dirancang khusus untuk kenyamanan mobile satu tangan (*mobile-first ergonomic*). 
 
-Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa registrasi akun, dan tanpa pelacakan data. Seluruh data video, bookmark, kategori, dan metadata tersimpan secara permanen di memori lokal smartphone Anda menggunakan **IndexedDB (Dexie.js)**.
+Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa registrasi akun, dan tanpa pelacakan data. Seluruh koleksi video, bookmark, kategori, serta catatan teks pribadi Anda tersimpan permanen di memori lokal smartphone menggunakan **IndexedDB (Dexie.js v2)**.
 
 ---
 
 ## ✨ Fitur Unggulan
 
-### ⚡ 1. Auto-Scraper Metadata Otomatis (CORS-Free)
-- **Auto-Fetch Judul & Thumbnail**: Cukup tempel link video, aplikasi secara cerdas mengekstrak judul asli dan cover thumbnail secara otomatis menggunakan parser **OpenGraph, Twitter Card, dan oEmbed**.
-- **Native Android CORS Bypass**: Didukung oleh plugin `@capacitor/core` (`CapacitorHttp`) yang mengeksekusi request HTTP di level native Android, memungkinkan scraping metadata dari berbagai platform video tanpa terhambat CORS.
+### 💎 1. Desain Apple "Liquid Glass" 1:1 & Palet Mewah
+- **Palet Stealth Mewah**: Paduan latar belakang terdalam **Deep Obsidian Onyx** (`#070709`), panel permukaan **Warm Dark Espresso/Mocha** (`#161311`), aksen kontras mencolok **Tactical Military / Army Emerald Green** (`#22c55e` / `#4ade80`), dan sentuhan **Champagne Gold**.
+- **Liquid Glassmorphism 1:1**: Efek kaca cair multi-layer ultra-soft (`backdrop-blur-28px`), rim highlight specular 1px putih tipis di tepi kartu, serta inner ambient lighting layaknya antarmuka visionOS / iOS modern.
+- **Header Action Protection**: Tombol aksi utama `+` ditempatkan elegan di **Header Navbar atas** berdampingan dengan tombol Sort, menjamin 100% bebas dari risiko terpotong batas bawah layar atau navigation gesture bar HP.
 
-### 📑 2. Batch Link Importer & Wizard Kategorisasi Cepat
-- **Import Kumpulan Link Sekaligus**: Punya banyak link di Google Keep atau catatan teks? Cukup *copy-paste* seluruh teks catatan berisi puluhan tautan sekaligus ke tab *Import Banyak*. Sistem otomatis mendeteksi dan memisahkan setiap URL `https://...`.
-- **Sequential Step-by-Step Wizard**:
-  - Memproses link satu per satu dengan pratinjau judul & thumbnail hasil scraping instan.
-  - **1-Tap Category Pick**: Menyajikan tombol chip kategori yang langsung bisa diketuk dengan 1 jempol. Sekali ketuk, link tersimpan ke database dan layar otomatis berpindah ke link berikutnya.
-  - **Memori Kategori Cerdas**: Setiap kategori baru yang Anda buat langsung diingat dan otomatis muncul sebagai tombol pilihan pada link-link berikutnya.
+### 🪐 2. Animasi 3D Realistic Cinematic Vault Intro
+- **Realistic 3D Perspective**: Begitu aplikasi dibuka, pengguna disambut oleh intro 3D emblem vault holografik yang berputar dengan depth perspective (`perspective: 1200px`), sapuan cahaya metallic sheen, dan gelombang shockwave Army Emerald.
+- **Seamless Dissolve & Tap-to-Skip**: Bertransisi halus zoom-in ke dashboard utama dalam 1.8 detik, atau cukup ketuk layar kapan saja untuk masuk seketika.
 
-### 🎨 3. Estetika Modern & Dark Mode Premium
-- **Deep Zinc Palette (`#09090b`)**: Paduan latar belakang zinc gelap pekat dengan panel kartu `#121217` dan efek *ambient lighting* gradien indigo-violet yang elegan.
-- **Glassmorphism Subtle**: Sentuhan border semi-transparan beraksen *inset highlight* tipis untuk ilusi kedalaman visual yang mewah.
-- **Proporsi Card 16:9 Sinematik**: Thumbnail video proporsional dengan badge kategori mengambang (*frosted pill badge*) dan overlay tombol play interaktif saat ditekan atau disentuh.
+### 📝 3. Fitur "Vault Notes" (Catatan Pribadi In-App ala Google Keep)
+- **Modul Catatan Terintegrasi**: Tersedia navigasi segmented switch `[ 🎬 Video ]` dan `[ 📝 Catatan ]` di bagian atas aplikasi.
+- **Penyimpanan Catatan 100% Offline**: Tulis, baca, cari, edit, dan kelola catatan bebas langsung di dalam aplikasi layaknya Google Keep pribadi Anda.
+- **Auto-Capture saat Import Massal**: Saat mengimpor teks catatan yang berisi campuran link dan kalimat teks, seluruh kalimat non-link otomatis diekstrak dan disimpan sebagai catatan baru di tab Catatan!
 
-### 📱 4. Ergonomi Mobile Ramah Jempol & Anti-Clipping
-- **Tombol '+' (FAB) Terproteksi Safe Area**: Jarak bawah dan samping tombol FAB telah dioptimasi (`bottom: max(2.5rem, ...)` dan `right: max(1.5rem, ...)`) sehingga tidak akan terpotong oleh sudut layar melengkung (*curved bezel*), gesture pill, maupun *3-button navigation bar* Android.
-- **Touch Target Nyaman (≥ 44×44px)**: Semua tombol aksi utama, filter, menu drop-down, dan bottom sheet mudah dijangkau dengan satu tangan tanpa salah ketuk.
-- **Smooth Horizontal Category Bar**: Filter bar kategori dapat di-swipe mulus dari ujung ke ujung tanpa scrollbar yang mengganggu.
+### 🧹 4. Smart Notes & Glued Links Parser
+- **Pemisahan Link Menempel**: Menangani teks berantakan dari catatan (seperti `.https://...https://...` tanpa spasi) secara otomatis dan akurat.
+- **Pembersih Teks Menempel di URL**: Memotong teks judul yang nempel langsung di ujung slash URL dan memilahnya menjadi tautan bersih serta catatan teks pendamping.
 
-### 🎥 5. Pemutar Video Multi-Platform Terintegrasi
-- **Embedded Web Player**: Pratinjau langsung video dari berbagai platform video terkemuka di dalam aplikasi tanpa perlu membuka browser luar.
-- **HTML5 Direct Player**: Pemutar bawaan untuk file `.mp4`, `.webm`, `.mov`, dan link video langsung lengkap dengan kontrol pemutaran.
+### 🌐 5. Kategori Otomatis Berdasarkan Domain Web (*Auto-Domain Category*)
+- **Deteksi Cerdas**: Aplikasi otomatis mengenali domain URL dan langsung menjadikannya kategori default tanpa perlu diketik manual (misal: tautan dari website video tertentu otomatis berkategori nama website tersebut).
+- **1-Tap Save di Wizard**: Kategori domain otomatis terisi dan tersorot di wizard batch; pengguna cukup 1 ketukan untuk konfirmasi simpan seketika.
+
+### ⚡ 6. Auto-Scraper Metadata (CORS-Free di Android)
+- **Ekstraksi Otomatis**: Judul asli dan cover thumbnail otomatis diambil menggunakan parser **OpenGraph, Twitter Card, dan oEmbed** via `@capacitor/core` (`CapacitorHttp`) yang menembus CORS di native Android.
+- **Smart URL Slug Fallback**: Jika suatu halaman video terblokir oleh jaringan ISP, sistem otomatis mengekstrak judul langsung dari slug path URL sehingga data video tidak pernah kosong.
+
+### 🎥 7. Pemutar Video Terintegrasi Multi-Platform
+- **Universal Embedded Player**: Mendukung pemutaran iframe resmi untuk berbagai platform video terkemuka di dalam aplikasi.
+- **HTML5 Direct Player**: Pemutar video bawaan untuk file `.mp4`, `.webm`, `.mov`, dan streaming langsung.
 - **External Web Launcher**: Tautan fallback otomatis membuka browser eksternal dalam 1 ketukan untuk URL website umum.
 
 ---
@@ -53,9 +59,9 @@ Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa reg
 
 ```mermaid
 graph TD
-    A["📱 User Interface (HTML5 / Tailwind CSS v4)"] -->|Event Listeners & State| B["⚡ Vanilla JS Engine (ES Modules)"]
-    B -->|Offline Storage API| C["💾 Dexie.js (IndexedDB Local)"]
-    B -->|CapacitorHttp CORS Bypass| D["🌐 Metadata Scraper (OpenGraph / oEmbed)"]
+    A["📱 User Interface (Apple Liquid Glass / Tailwind CSS v4)"] -->|Event Listeners & State| B["⚡ Vanilla JS Engine (ES Modules)"]
+    B -->|Offline Storage API (v2)| C["💾 Dexie.js (videos + notes)"]
+    B -->|CapacitorHttp CORS Bypass| D["🌐 Metadata Scraper & Smart Notes Parser"]
     B -->|Capacitor Bridge| E["🤖 Native Android Shell (Capacitor 6/7)"]
     E -->|Cloud Compilation| F["☁️ GitHub Actions CI/CD (JDK 21)"]
 ```
@@ -63,9 +69,8 @@ graph TD
 | Komponen | Teknologi | Keterangan |
 | :--- | :--- | :--- |
 | **Frontend Core** | Vanilla JavaScript (ESM) | Ringan, bebas *overhead*, pemeliharaan mudah |
-| **Bundler & Tooling** | Vite 8+ | Hot Module Replacement (HMR) & build kilat (< 1s) |
-| **Styling** | Tailwind CSS v4 | Build-time CSS lokal via `@tailwindcss/vite` |
-| **Database Lokal** | Dexie.js v4 | Pembungkus IndexedDB berkemampuan query cepat |
+| **Styling & Theme** | Tailwind CSS v4 + Liquid Glass | Deep Obsidian, Mocha & Army Emerald Theme |
+| **Database Lokal** | Dexie.js v2 (IndexedDB) | Store `videos` & Store `notes` 100% offline |
 | **Hybrid Bridge & HTTP** | Capacitor Android + CapacitorHttp | Bridge native Android & HTTP bypass CORS |
 | **Cloud CI/CD** | GitHub Actions (JDK 21) | Otomatisasi kompilasi `.apk` di cloud |
 
@@ -84,9 +89,9 @@ video-vault/
 │       └── res/                # Ikon launcher & branding aplikasi
 ├── public/                     # Aset statis & logo
 ├── src/
-│   ├── main.js                 # Logika Dexie.js, scraper, wizard batch import & UI
-│   └── style.css               # Import Tailwind v4, safe-area & micro-animations
-├── index.html                  # Shell antarmuka, wizard modal, bottom sheet & player
+│   ├── main.js                 # Logika Dexie v2, scraper, notes, wizard & UI
+│   └── style.css               # Apple Liquid Glass, 3D intro & micro-animations
+├── index.html                  # Shell antarmuka, 3D intro, notes modal & player
 ├── capacitor.config.json       # Konfigurasi appId & plugin CapacitorHttp
 ├── vite.config.js              # Konfigurasi bundler Vite + Tailwind
 ├── package.json                # Dependensi proyek
@@ -178,26 +183,38 @@ sequenceDiagram
 
 ---
 
-## 🗄️ Format Skema Database (`VideoVaultDB`)
+## 🗄️ Format Skema Database Dexie.js v2 (`VideoVaultDB`)
 
-Skema IndexedDB dikelola secara terstruktur melalui Dexie.js:
+Skema IndexedDB dikelola secara terstruktur melalui Dexie.js versi 2:
 
 ```javascript
 const db = new Dexie("VideoVaultDB");
 db.version(1).stores({
   videos: "++id, title, url, category, createdAt"
 });
+db.version(2).stores({
+  videos: "++id, title, url, category, createdAt",
+  notes: "++id, title, content, createdAt, updatedAt"
+});
 ```
 
+### Store `videos`:
 - `id`: Auto-increment integer (Primary Key).
 - `title`: Judul video / deskripsi.
-- `url`: Tautan video (YouTube, MP4 langsung, atau tautan web).
-- `thumbnail`: URL gambar thumbnail cover (opsional).
-- `category`: Label pengelompokan kategori.
-- `createdAt`: ISO 8601 timestamp pembuatan data.
+- `url`: Tautan video.
+- `thumbnail`: URL cover thumbnail video.
+- `category`: Label kategori (otomatis dari domain web atau kustom).
+- `createdAt`: ISO 8601 timestamp pembuatan.
+
+### Store `notes`:
+- `id`: Auto-increment integer (Primary Key).
+- `title`: Judul catatan pribadi.
+- `content`: Teks isi catatan lengkap.
+- `createdAt`: ISO 8601 timestamp pembuatan.
+- `updatedAt`: ISO 8601 timestamp terakhir disunting.
 
 ---
 
 ## 📄 Lisensi & Kontribusi
 
-Dilisensikan di bawah [MIT License](LICENSE). Dibuat dengan dedikasi untuk performa, estetika dark mode, dan privasi penuh di perangkat Android Anda.
+Dilisensikan di bawah [MIT License](LICENSE). Dibuat dengan dedikasi untuk estetika Apple Liquid Glass, performa tanpa lag, dan privasi penuh di perangkat Android Anda.

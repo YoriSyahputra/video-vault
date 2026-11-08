@@ -6,42 +6,119 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#070709" />
     <meta name="color-scheme" content="dark" />
     <title>VideoVault</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body
-    class="bg-[#09090b] text-zinc-100 min-h-screen flex flex-col antialiased font-sans overflow-x-hidden selection:bg-indigo-500/30 selection:text-white"
+    class="bg-[#070709] text-zinc-100 min-h-screen flex flex-col antialiased font-sans overflow-x-hidden selection:bg-emerald-500/30 selection:text-white"
   >
-    <!-- Ambient glow background -->
+    <!-- =========================================================
+         3D Realistic Cinematic Vault Intro Screen
+         ========================================================= -->
+    <div
+      id="app-intro-overlay"
+      class="fixed inset-0 z-[200] bg-[#070709] flex flex-col items-center justify-center intro-perspective-wrap select-none cursor-pointer overflow-hidden transition-all duration-500"
+    >
+      <!-- Warm Mocha & Tactical Emerald Ambient Radial Glows -->
+      <div
+        class="absolute w-[340px] h-[340px] rounded-full bg-emerald-600/20 blur-[120px] -top-10 -left-10 pointer-events-none"
+      ></div>
+      <div
+        class="absolute w-[360px] h-[360px] rounded-full bg-[#3d271d]/35 blur-[130px] -bottom-10 -right-10 pointer-events-none"
+      ></div>
+      <div
+        class="absolute w-[280px] h-[280px] rounded-full bg-emerald-500/10 blur-[90px] pointer-events-none"
+      ></div>
+
+      <!-- 3D Rotating Vault Emblem & Badge -->
+      <div class="relative flex flex-col items-center animate-vault-3d">
+        <!-- Shockwave Glow Ring -->
+        <div
+          class="absolute -inset-6 rounded-[36px] bg-gradient-to-tr from-emerald-500/25 via-emerald-400/10 to-transparent blur-md animate-shockwave pointer-events-none"
+        ></div>
+
+        <!-- 3D Liquid Glass Medal -->
+        <div
+          class="relative w-28 h-28 rounded-[30px] liquid-glass flex items-center justify-center overflow-hidden border border-white/20 shadow-2xl shadow-black/90"
+        >
+          <!-- Specular Light Beam Sweep -->
+          <div
+            class="absolute -inset-full bg-gradient-to-r from-transparent via-white/30 to-transparent animate-sheen pointer-events-none"
+          ></div>
+
+          <!-- Metallic Vault Play Icon -->
+          <div
+            class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/40 ring-1 ring-white/30"
+          >
+            <svg
+              class="w-7 h-7 text-white ml-1 filter drop-shadow"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M6 4.2c0-.9.98-1.44 1.73-.96l12.4 7.8a1.14 1.14 0 0 1 0 1.92l-12.4 7.8A1.14 1.14 0 0 1 6 19.8V4.2Z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Luxury Typography Branding -->
+        <div class="text-center mt-6 space-y-1">
+          <h1
+            class="font-black text-2xl tracking-[0.2em] uppercase bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent"
+          >
+            VideoVault
+          </h1>
+          <p
+            class="text-[11px] font-semibold tracking-[0.3em] uppercase text-emerald-400/90"
+          >
+            Offline Luxury Vault
+          </p>
+        </div>
+      </div>
+
+      <!-- Tap to Skip Hint -->
+      <div class="absolute bottom-10 inset-x-0 text-center">
+        <span
+          class="text-[11px] font-medium tracking-wider uppercase text-zinc-500 animate-pulse"
+          >Ketuk untuk lanjut</span
+        >
+      </div>
+    </div>
+
+    <!-- Ambient background glows -->
     <div
       aria-hidden="true"
       class="fixed inset-0 overflow-hidden pointer-events-none z-0"
     >
       <div
-        class="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-indigo-600/15 blur-[100px] animate-blob-1"
+        class="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-emerald-600/12 blur-[110px] animate-blob-1"
       ></div>
       <div
-        class="absolute top-1/3 -right-28 w-88 h-88 rounded-full bg-purple-600/15 blur-[120px] animate-blob-2"
+        class="absolute top-1/3 -right-28 w-88 h-88 rounded-full bg-[#3d271d]/25 blur-[130px] animate-blob-2"
       ></div>
       <div
-        class="absolute -bottom-10 left-1/4 w-72 h-72 rounded-full bg-indigo-500/10 blur-[90px] animate-blob-1"
+        class="absolute -bottom-10 left-1/4 w-72 h-72 rounded-full bg-emerald-500/10 blur-[100px] animate-blob-1"
         style="animation-direction: reverse;"
       ></div>
     </div>
 
-    <!-- Top Sticky Navbar -->
+    <!-- =========================================================
+         Top Sticky Navbar (Tombol '+' Berada di Header)
+         ========================================================= -->
     <header class="sticky top-0 z-40 pt-safe transition-all duration-200">
       <div
-        class="absolute inset-0 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/[0.06]"
+        class="absolute inset-0 bg-[#070709]/80 backdrop-blur-2xl border-b border-white/[0.07]"
       ></div>
       <div
         class="relative px-4 py-3 flex items-center justify-between max-w-2xl mx-auto"
       >
+        <!-- Brand Title & Indicator -->
         <div class="flex items-center gap-3">
           <div
-            class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 ring-1 ring-white/20 flex-shrink-0"
+            class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/30 ring-1 ring-white/20 flex-shrink-0"
           >
             <svg
               class="w-5 h-5 text-white ml-0.5"
@@ -54,7 +131,7 @@
             </svg>
           </div>
           <div>
-            <h1 class="font-bold text-[18px] tracking-tight leading-none text-white">
+            <h1 class="font-black text-[18px] tracking-tight leading-none text-white">
               VideoVault
             </h1>
             <div class="flex items-center gap-1.5 mt-1">
@@ -66,16 +143,310 @@
           </div>
         </div>
 
-        <!-- Sort Menu -->
-        <div class="relative">
+        <!-- Header Actions: '+' Button & Sort Button (Bebas Clipping Bawah!) -->
+        <div class="flex items-center gap-2">
+          <!-- Tombol Tambah / Import Baru (+) di Header -->
           <button
-            id="btn-sort"
+            id="btn-open-modal"
             data-ripple
-            class="ripple-container w-11 h-11 rounded-2xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center text-zinc-300 hover:text-white hover:bg-white/[0.08] active:scale-95 touch-press transition-all shadow-sm"
-            aria-label="Urutkan video"
+            class="ripple-container h-10 px-3.5 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 ring-1 ring-white/25 active:scale-95 touch-press transition-all"
+            aria-label="Tambah video atau import link"
           >
             <svg
-              class="w-5 h-5"
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span class="hidden xs:inline text-[12px]">Tambah</span>
+          </button>
+
+          <!-- Sort Dropdown Trigger -->
+          <div class="relative">
+            <button
+              id="btn-sort"
+              data-ripple
+              class="ripple-container w-10 h-10 rounded-2xl liquid-glass flex items-center justify-center text-zinc-300 hover:text-white active:scale-95 touch-press transition-all shadow-sm"
+              aria-label="Urutkan"
+            >
+              <svg
+                class="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.9"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M7 4v16M7 4 3 8M7 4l4 4" />
+                <path d="M17 20V4M17 20l4-4M17 20l-4-4" />
+              </svg>
+            </button>
+
+            <!-- Dropdown Sort Panel -->
+            <div
+              id="sort-panel"
+              class="absolute right-0 top-[48px] z-50 w-56 rounded-2xl liquid-glass p-1.5 origin-top-right scale-95 opacity-0 pointer-events-none transition-all duration-200 shadow-2xl shadow-black/80"
+            >
+              <p
+                class="px-3 pt-2 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400"
+              >
+                Urutkan berdasarkan
+              </p>
+              <button
+                data-sort="newest"
+                data-ripple
+                class="sort-option ripple-container w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.08] active:scale-[0.98] transition"
+              >
+                <span>Terbaru</span>
+                <svg
+                  class="sort-check w-4 h-4 text-emerald-400 hidden"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+              <button
+                data-sort="oldest"
+                data-ripple
+                class="sort-option ripple-container w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.08] active:scale-[0.98] transition"
+              >
+                <span>Terlama</span>
+                <svg
+                  class="sort-check w-4 h-4 text-emerald-400 hidden"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+              <button
+                data-sort="title"
+                data-ripple
+                class="sort-option ripple-container w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.08] active:scale-[0.98] transition"
+              >
+                <span>Judul A-Z</span>
+                <svg
+                  class="sort-check w-4 h-4 text-emerald-400 hidden"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+              <button
+                data-sort="category"
+                data-ripple
+                class="sort-option ripple-container w-full min-h-[42px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.08] active:scale-[0.98] transition"
+              >
+                <span>Kategori</span>
+                <svg
+                  class="sort-check w-4 h-4 text-emerald-400 hidden"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segmented Navigation Tab Switcher (Video vs Catatan) -->
+      <div class="px-4 pb-2.5 max-w-2xl mx-auto w-full">
+        <div
+          class="flex p-1 bg-white/[0.04] border border-white/[0.08] rounded-2xl backdrop-blur-md shadow-inner"
+        >
+          <button
+            id="nav-btn-videos"
+            data-ripple
+            class="ripple-container flex-1 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>🎬 Video</span>
+            <span
+              id="count-nav-videos"
+              class="px-1.5 py-0.2 rounded-full bg-black/30 text-[10px]"
+              >0</span
+            >
+          </button>
+          <button
+            id="nav-btn-notes"
+            data-ripple
+            class="ripple-container flex-1 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>📝 Catatan</span>
+            <span
+              id="count-nav-notes"
+              class="px-1.5 py-0.2 rounded-full bg-white/10 text-[10px]"
+              >0</span
+            >
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================================================
+         SECTION A: VIDEO VAULT VIEW
+         ========================================================= -->
+    <div id="section-videos" class="flex flex-col flex-1">
+      <!-- Search & Category Filters -->
+      <section class="relative z-10 px-4 pt-1 pb-2 max-w-2xl mx-auto w-full space-y-2.5">
+        <!-- Search Input Box -->
+        <div class="relative">
+          <svg
+            class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Cari judul video atau tautan..."
+            class="w-full h-11 liquid-glass rounded-2xl pl-11 pr-11 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-inner"
+          />
+          <button
+            id="btn-clear-search"
+            class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90 transition"
+            aria-label="Hapus pencarian"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Horizontal Swiping Category Pills -->
+        <div
+          id="category-filters"
+          class="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 py-1 text-xs"
+        ></div>
+      </section>
+
+      <!-- Main Video Grid Container -->
+      <main class="relative z-10 flex-1 px-4 max-w-2xl mx-auto w-full pb-20 pt-1">
+        <!-- Skeleton Loaders -->
+        <div
+          id="skeleton-grid"
+          class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+        >
+          <div class="rounded-2xl liquid-glass-card p-3 space-y-3">
+            <div class="aspect-video w-full rounded-xl skeleton"></div>
+            <div class="space-y-2 pt-1">
+              <div class="h-3.5 w-4/5 rounded-full skeleton"></div>
+              <div class="h-3 w-2/5 rounded-full skeleton"></div>
+            </div>
+          </div>
+          <div class="rounded-2xl liquid-glass-card p-3 space-y-3">
+            <div class="aspect-video w-full rounded-xl skeleton"></div>
+            <div class="space-y-2 pt-1">
+              <div class="h-3.5 w-4/5 rounded-full skeleton"></div>
+              <div class="h-3 w-2/5 rounded-full skeleton"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Grid Items -->
+        <div
+          id="video-grid"
+          class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+        ></div>
+
+        <!-- Empty State: Belum Ada Video -->
+        <div id="empty-state" class="hidden text-center py-16 px-6">
+          <div class="relative w-24 h-24 mx-auto mb-5">
+            <div
+              class="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-500/20 via-[#3d271d]/30 to-transparent blur-xl"
+            ></div>
+            <div
+              class="absolute inset-0 rounded-3xl liquid-glass flex items-center justify-center animate-float shadow-xl shadow-black/60"
+            >
+              <svg
+                class="w-9 h-9 text-emerald-400"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="3" />
+                <path d="M9.5 9v6l5-3-5-3Z" fill="currentColor" stroke="none" />
+              </svg>
+            </div>
+          </div>
+          <h2 class="font-bold text-base text-white">
+            Vault Video Anda Kosong
+          </h2>
+          <p
+            class="text-zinc-400 text-xs mt-1.5 max-w-[260px] mx-auto leading-relaxed"
+          >
+            Mulai tambahkan link video atau import catatan Google Keep untuk disimpan secara offline.
+          </p>
+          <button
+            id="btn-empty-add"
+            data-ripple
+            class="ripple-container mt-5 inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:brightness-110 text-xs font-semibold text-white px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95 touch-press transition"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Tambah Video Pertama
+          </button>
+        </div>
+
+        <!-- Empty State: Hasil Pencarian Nihil -->
+        <div id="empty-search-state" class="hidden text-center py-16 px-6">
+          <div
+            class="relative w-16 h-16 mx-auto mb-4 rounded-2xl liquid-glass flex items-center justify-center"
+          >
+            <svg
+              class="w-7 h-7 text-zinc-500"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -83,312 +454,165 @@
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path d="M7 4v16M7 4 3 8M7 4l4 4" />
-              <path d="M17 20V4M17 20l4-4M17 20l-4-4" />
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+              <path d="m9 9 4 4M13 9l-4 4" />
             </svg>
-          </button>
-
-          <!-- Dropdown Sort Panel -->
-          <div
-            id="sort-panel"
-            class="absolute right-0 top-[52px] z-50 w-56 rounded-2xl bg-[#121217]/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/70 p-1.5 origin-top-right scale-95 opacity-0 pointer-events-none transition-all duration-200"
+          </div>
+          <h2 class="font-bold text-sm text-zinc-200">
+            Video Tidak Ditemukan
+          </h2>
+          <p
+            id="empty-search-query"
+            class="text-zinc-400 text-xs mt-1 max-w-[240px] mx-auto leading-relaxed"
           >
-            <p
-              class="px-3 pt-2.5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-zinc-400"
-            >
-              Urutkan berdasarkan
-            </p>
-            <button
-              data-sort="newest"
-              data-ripple
-              class="sort-option ripple-container w-full min-h-[44px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.07] active:scale-[0.98] transition"
-            >
-              <span>Terbaru</span>
-              <svg
-                class="sort-check w-4 h-4 text-indigo-400 hidden"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </button>
-            <button
-              data-sort="oldest"
-              data-ripple
-              class="sort-option ripple-container w-full min-h-[44px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.07] active:scale-[0.98] transition"
-            >
-              <span>Terlama</span>
-              <svg
-                class="sort-check w-4 h-4 text-indigo-400 hidden"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </button>
-            <button
-              data-sort="title"
-              data-ripple
-              class="sort-option ripple-container w-full min-h-[44px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.07] active:scale-[0.98] transition"
-            >
-              <span>Judul A-Z</span>
-              <svg
-                class="sort-check w-4 h-4 text-indigo-400 hidden"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </button>
-            <button
-              data-sort="category"
-              data-ripple
-              class="sort-option ripple-container w-full min-h-[44px] flex items-center justify-between px-3 py-2 rounded-xl text-[13px] text-zinc-300 hover:bg-white/[0.07] active:scale-[0.98] transition"
-            >
-              <span>Kategori</span>
-              <svg
-                class="sort-check w-4 h-4 text-indigo-400 hidden"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 6 9 17l-5-5" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Search & Category Filters -->
-    <section class="relative z-10 px-4 pt-3.5 pb-2 max-w-2xl mx-auto w-full space-y-3">
-      <!-- Search Input Box -->
-      <div class="relative">
-        <svg
-          class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
-        <input
-          type="text"
-          id="search-input"
-          placeholder="Cari judul video atau tautan..."
-          class="w-full h-12 bg-[#121217]/70 backdrop-blur-md border border-white/[0.08] rounded-2xl pl-11 pr-11 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/50 focus:bg-[#15151c] focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-inner"
-        />
-        <button
-          id="btn-clear-search"
-          class="hidden absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 active:scale-90 transition"
-          aria-label="Hapus pencarian"
-        >
-          <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M18 6 6 18M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Horizontal Swiping Category Pills -->
-      <div
-        id="category-filters"
-        class="flex gap-2 overflow-x-auto no-scrollbar -mx-4 px-4 py-1 text-xs"
-      ></div>
-    </section>
-
-    <!-- Main Content / Video Grid -->
-    <main class="relative z-10 flex-1 px-4 max-w-2xl mx-auto w-full pb-36 pt-1">
-      <!-- Skeleton Loaders -->
-      <div
-        id="skeleton-grid"
-        class="grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
-        <div class="rounded-2xl overflow-hidden bg-[#121217]/60 border border-white/[0.06] p-3 space-y-3">
-          <div class="aspect-video w-full rounded-xl skeleton"></div>
-          <div class="space-y-2 pt-1">
-            <div class="h-3.5 w-4/5 rounded-full skeleton"></div>
-            <div class="h-3 w-2/5 rounded-full skeleton"></div>
-          </div>
-        </div>
-        <div class="rounded-2xl overflow-hidden bg-[#121217]/60 border border-white/[0.06] p-3 space-y-3">
-          <div class="aspect-video w-full rounded-xl skeleton"></div>
-          <div class="space-y-2 pt-1">
-            <div class="h-3.5 w-4/5 rounded-full skeleton"></div>
-            <div class="h-3 w-2/5 rounded-full skeleton"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Video Grid Items -->
-      <div
-        id="video-grid"
-        class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4"
-      ></div>
-
-      <!-- Empty State: Belum Ada Video Sama Sekali -->
-      <div id="empty-state" class="hidden text-center py-16 px-6">
-        <div class="relative w-28 h-28 mx-auto mb-6">
-          <div
-            class="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-transparent blur-2xl"
-          ></div>
-          <div
-            class="absolute inset-0 rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-md flex items-center justify-center animate-float shadow-xl shadow-black/40"
+            Tidak ada video yang cocok dengan kriteria pencarian.
+          </p>
+          <button
+            id="btn-reset-filters"
+            data-ripple
+            class="ripple-container mt-4 inline-flex items-center gap-1.5 liquid-glass text-xs font-semibold text-zinc-300 px-3.5 py-2 rounded-xl active:scale-95 touch-press transition"
           >
             <svg
-              class="w-10 h-10 text-indigo-400"
+              class="w-3.5 h-3.5 text-emerald-400"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              stroke-width="1.6"
+              stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <rect x="3" y="3" width="18" height="18" rx="3" />
-              <path d="M9.5 9v6l5-3-5-3Z" fill="currentColor" stroke="none" />
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            Reset Filter
+          </button>
+        </div>
+
+        <!-- Scroll Sentinel -->
+        <div id="scroll-sentinel" class="h-14 flex items-center justify-center">
+          <div
+            id="loading-more"
+            class="hidden w-5 h-5 rounded-full border-2 border-white/15 border-t-emerald-400 animate-spin"
+          ></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- =========================================================
+         SECTION B: VAULT NOTES VIEW (Catatan Pribadi ala Google Keep)
+         ========================================================= -->
+    <div id="section-notes" class="hidden flex flex-col flex-1">
+      <section class="relative z-10 px-4 pt-1 pb-2 max-w-2xl mx-auto w-full space-y-2.5">
+        <div class="flex items-center gap-2">
+          <!-- Notes Search Input -->
+          <div class="relative flex-1">
+            <svg
+              class="w-4 h-4 text-zinc-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              id="search-notes-input"
+              placeholder="Cari catatan..."
+              class="w-full h-11 liquid-glass rounded-2xl pl-11 pr-4 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-inner"
+            />
+          </div>
+
+          <!-- Add Note Button -->
+          <button
+            id="btn-new-note"
+            data-ripple
+            class="ripple-container h-11 px-3.5 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 active:scale-95 touch-press transition flex-shrink-0"
+          >
+            <svg
+              class="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            <span>Catatan Baru</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Notes Grid -->
+      <main class="relative z-10 flex-1 px-4 max-w-2xl mx-auto w-full pb-20 pt-1">
+        <div
+          id="notes-grid"
+          class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"
+        ></div>
+
+        <!-- Empty Notes State -->
+        <div id="empty-notes-state" class="hidden text-center py-16 px-6">
+          <div
+            class="relative w-20 h-20 mx-auto mb-4 rounded-2xl liquid-glass flex items-center justify-center animate-float shadow-xl shadow-black/60"
+          >
+            <svg
+              class="w-8 h-8 text-emerald-400"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
             </svg>
           </div>
-          <span
-            class="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-purple-400/80 shadow-md shadow-purple-400/50"
-          ></span>
-          <span
-            class="absolute bottom-2 -left-2 w-2.5 h-2.5 rounded-full bg-indigo-400/80 shadow-md shadow-indigo-400/50"
-          ></span>
+          <h2 class="font-bold text-base text-white">
+            Belum Ada Catatan
+          </h2>
+          <p
+            class="text-zinc-400 text-xs mt-1.5 max-w-[260px] mx-auto leading-relaxed"
+          >
+            Teks atau kalimat yang Anda tempel saat import link akan otomatis tersimpan di sini, atau buat catatan baru manual.
+          </p>
+          <button
+            id="btn-empty-add-note"
+            data-ripple
+            class="ripple-container mt-5 inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 text-xs font-semibold text-white px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-500/25 active:scale-95 touch-press transition"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            Tulis Catatan Pertama
+          </button>
         </div>
-        <h2 class="font-bold text-lg text-white">
-          Vault Anda Masih Kosong
-        </h2>
-        <p
-          class="text-zinc-400 text-sm mt-2 max-w-[260px] mx-auto leading-relaxed"
-        >
-          Koleksi video favorit, materi belajar, atau klip penting Anda tersimpan aman dan 100% offline di perangkat.
-        </p>
-        <button
-          id="btn-empty-add"
-          data-ripple
-          class="ripple-container mt-6 inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 border border-white/10 text-sm font-semibold text-white px-5 py-3 rounded-2xl shadow-lg shadow-indigo-500/25 active:scale-95 touch-press transition"
-        >
-          <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Tambah Video Pertama
-        </button>
-      </div>
+      </main>
+    </div>
 
-      <!-- Empty State: Hasil Pencarian Nihil -->
-      <div id="empty-search-state" class="hidden text-center py-16 px-6">
-        <div class="relative w-20 h-20 mx-auto mb-5 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center">
-          <svg
-            class="w-8 h-8 text-zinc-500"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-            <path d="m9 9 4 4M13 9l-4 4" />
-          </svg>
-        </div>
-        <h2 class="font-bold text-base text-zinc-200">
-          Video Tidak Ditemukan
-        </h2>
-        <p id="empty-search-query" class="text-zinc-400 text-sm mt-1.5 max-w-[260px] mx-auto leading-relaxed">
-          Tidak ada video yang cocok dengan kriteria pencarian Anda.
-        </p>
-        <button
-          id="btn-reset-filters"
-          data-ripple
-          class="ripple-container mt-5 inline-flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-zinc-300 px-4 py-2.5 rounded-xl active:scale-95 touch-press transition"
-        >
-          <svg
-            class="w-3.5 h-3.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
-          </svg>
-          Reset Pencarian & Kategori
-        </button>
-      </div>
-
-      <!-- Scroll Sentinel for Infinite Scrolling -->
-      <div id="scroll-sentinel" class="h-14 flex items-center justify-center">
-        <div
-          id="loading-more"
-          class="hidden w-5 h-5 rounded-full border-2 border-white/15 border-t-indigo-400 animate-spin"
-        ></div>
-      </div>
-    </main>
-
-    <!-- Floating Action Button (FAB) with Enhanced Safe Area Clearance -->
-    <button
-      id="btn-open-modal"
-      data-ripple
-      class="ripple-container fixed fab-safe-bottom z-40 w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 shadow-[0_12px_35px_-4px_rgba(99,102,241,0.7)] ring-1 ring-white/20 flex items-center justify-center text-white active:scale-90 touch-press transition-transform"
-      aria-label="Tambah video"
-    >
-      <span
-        class="absolute inset-0 rounded-2xl bg-purple-400/30 animate-ping-slow pointer-events-none"
-      ></span>
-      <svg
-        class="relative w-6 h-6"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M12 5v14M5 12h14" />
-      </svg>
-    </button>
-
-    <!-- Modal Form (Tambah / Edit / Batch Import Wizard) -->
+    <!-- =========================================================
+         MODAL 1: Tambah Video & Batch Import Wizard
+         ========================================================= -->
     <div
       id="modal-backdrop"
-      class="fixed inset-0 z-[90] bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
+      class="fixed inset-0 z-[90] bg-black/85 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300"
     ></div>
     <div
       id="modal"
@@ -396,7 +620,7 @@
     >
       <div
         id="modal-panel"
-        class="relative w-full sm:max-w-md bg-[#121217]/95 backdrop-blur-2xl border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-3xl p-5 shadow-2xl scale-95 opacity-0 transition-all duration-300 max-h-[92vh] overflow-y-auto pb-safe"
+        class="relative w-full sm:max-w-md liquid-glass border-t sm:border border-white/15 rounded-t-[28px] sm:rounded-3xl p-5 shadow-2xl scale-95 opacity-0 transition-all duration-300 max-h-[92vh] overflow-y-auto pb-safe"
       >
         <!-- Mobile drag pill indicator -->
         <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3 sm:hidden"></div>
@@ -426,12 +650,15 @@
           </button>
         </div>
 
-        <!-- Mode Tabs: Single Video vs Batch Import (Hidden when editing or in wizard) -->
-        <div id="modal-tabs" class="grid grid-cols-2 gap-1.5 p-1 bg-white/[0.04] border border-white/[0.06] rounded-xl mb-4">
+        <!-- Mode Tabs: Single Video vs Batch Import -->
+        <div
+          id="modal-tabs"
+          class="grid grid-cols-2 gap-1.5 p-1 bg-white/[0.04] border border-white/[0.08] rounded-xl mb-4"
+        >
           <button
             type="button"
             id="tab-btn-single"
-            class="py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm transition-all"
+            class="py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm transition-all"
           >
             Satu Video
           </button>
@@ -446,18 +673,21 @@
 
         <!-- VIEW 1: Form Satu Video -->
         <div id="view-single">
-          <form id="video-form" class="space-y-4">
+          <form id="video-form" class="space-y-3.5">
             <input type="hidden" id="form-id" />
-            
+
             <!-- URL Field with Auto-Scraper Trigger -->
             <div>
               <div class="flex items-center justify-between mb-1.5">
                 <label
                   for="form-url"
-                  class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider"
+                  class="block text-[10.5px] font-semibold text-emerald-400 uppercase tracking-wider"
                   >URL Video</label
                 >
-                <span id="url-status-hint" class="text-[11px] text-indigo-400 flex items-center gap-1"></span>
+                <span
+                  id="url-status-hint"
+                  class="text-[11px] text-emerald-400 flex items-center gap-1 font-medium"
+                ></span>
               </div>
               <div class="relative">
                 <svg
@@ -480,18 +710,20 @@
                   type="url"
                   id="form-url"
                   required
-                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-24 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/15 transition-all"
+                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-24 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all"
                   placeholder="https://..."
                 />
-                <!-- Auto Fetch Magic Button -->
                 <button
                   type="button"
                   id="btn-fetch-meta"
                   data-ripple
-                  class="ripple-container absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 text-xs font-semibold flex items-center gap-1 active:scale-95 touch-press transition"
+                  class="ripple-container absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold flex items-center gap-1 active:scale-95 touch-press transition"
                   title="Ambil Judul & Thumbnail Otomatis"
                 >
-                  <span id="fetch-spinner" class="hidden w-3 h-3 rounded-full border-2 border-indigo-300 border-t-transparent animate-spin"></span>
+                  <span
+                    id="fetch-spinner"
+                    class="hidden w-3 h-3 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"
+                  ></span>
                   <span id="fetch-icon">✨</span>
                   <span>Ambil</span>
                 </button>
@@ -502,7 +734,7 @@
             <div>
               <label
                 for="form-title"
-                class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
+                class="block text-[10.5px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
                 >Judul Video</label
               >
               <div class="relative">
@@ -521,7 +753,7 @@
                   type="text"
                   id="form-title"
                   required
-                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/15 transition-all"
+                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all"
                   placeholder="Judul video akan terisi otomatis"
                 />
               </div>
@@ -530,7 +762,7 @@
             <!-- Thumbnail Field with Preview Box -->
             <div>
               <label
-                class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
+                class="block text-[10.5px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
                 >Thumbnail Video
                 <span class="normal-case text-zinc-500">(auto / opsional)</span></label
               >
@@ -576,20 +808,25 @@
                   <input
                     type="url"
                     id="form-thumbnail"
-                    class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/15 transition-all"
+                    class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all"
                     placeholder="URL cover (terisi otomatis)"
                   />
                 </div>
               </div>
             </div>
 
-            <!-- Category Field -->
+            <!-- Category Field (Auto-domain populated!) -->
             <div>
-              <label
-                for="form-category"
-                class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
-                >Kategori</label
-              >
+              <div class="flex items-center justify-between mb-1.5">
+                <label
+                  for="form-category"
+                  class="block text-[10.5px] font-semibold text-zinc-400 uppercase tracking-wider"
+                  >Kategori</label
+                >
+                <span class="text-[10px] text-emerald-400 font-medium"
+                  >Auto: Nama Domain Web</span
+                >
+              </div>
               <div class="relative">
                 <svg
                   class="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -611,27 +848,27 @@
                   list="category-datalist"
                   required
                   autocomplete="off"
-                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/15 transition-all"
-                  placeholder="Contoh: Edukasi, Musik, Favorit"
+                  class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all"
+                  placeholder="Kategori (otomatis nama website)"
                 />
                 <datalist id="category-datalist"></datalist>
               </div>
             </div>
 
             <!-- Modal Action Buttons -->
-            <div class="flex gap-2.5 pt-3">
+            <div class="flex gap-2.5 pt-2">
               <button
                 type="button"
                 id="btn-cancel"
                 data-ripple
-                class="ripple-container flex-1 min-h-[46px] bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 text-sm font-medium py-2.5 rounded-xl transition active:scale-95 touch-press"
+                class="ripple-container flex-1 min-h-[44px] bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 text-xs font-semibold py-2.5 rounded-xl transition active:scale-95 touch-press"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 data-ripple
-                class="ripple-container flex-1 min-h-[46px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:brightness-110 text-white text-sm font-semibold py-2.5 rounded-xl transition active:scale-95 touch-press shadow-lg shadow-indigo-500/30"
+                class="ripple-container flex-1 min-h-[44px] bg-gradient-to-r from-emerald-600 to-emerald-500 hover:brightness-110 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95 touch-press shadow-lg shadow-emerald-600/30"
               >
                 Simpan Video
               </button>
@@ -640,43 +877,53 @@
         </div>
 
         <!-- VIEW 2: Batch Links Paste Input (Google Keep Importer) -->
-        <div id="view-batch" class="hidden space-y-4">
+        <div id="view-batch" class="hidden space-y-3.5">
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <label
                 for="batch-textarea"
-                class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider"
-                >Tempel Daftar Link Catatan</label
+                class="block text-[10.5px] font-semibold text-emerald-400 uppercase tracking-wider"
+                >Tempel Catatan Google Keep</label
               >
               <span
                 id="batch-count-badge"
-                class="px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-[11px] font-semibold text-indigo-400"
-                >0 link terdeteksi</span
+                class="px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10.5px] font-semibold text-emerald-400"
+                >0 link & 0 catatan</span
               >
             </div>
             <textarea
               id="batch-textarea"
               rows="6"
-              class="w-full bg-white/[0.04] border border-white/10 rounded-2xl p-3.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-indigo-500/15 transition-all resize-none font-mono leading-relaxed"
-              placeholder="Tempel catatan Google Keep berisi banyak link di sini...
+              class="w-full bg-white/[0.04] border border-white/10 rounded-2xl p-3.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all resize-none font-mono leading-relaxed"
+              placeholder="Tempel catatan Google Keep di sini...
 
-Contoh:
-https://youtube.com/watch?v=...
-https://xvideos.com/video...
-https://pornhub.com/view_video.php?...
-Catatan lain https://site.com/video.mp4"
+Sistem otomatis memisahkan link yang menempel dan menyimpan teks/kalimat non-link ke tab Catatan!"
             ></textarea>
-            <p class="text-[11px] text-zinc-500 mt-1.5 leading-normal">
-              Sistem akan memisahkan setiap URL secara otomatis. Anda akan mengkategorikannya dengan cepat satu per satu.
-            </p>
+            <div
+              class="mt-2 p-2.5 rounded-xl liquid-glass border border-emerald-500/20 text-[11px] text-zinc-400 space-y-1"
+            >
+              <div class="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <span>✨</span>
+                <span>Fitur Cerdas Keep Parser:</span>
+              </div>
+              <p>
+                1. Link menempel (seperti <code class="text-zinc-200">.https://...</code>) otomatis dipisahkan.
+              </p>
+              <p>
+                2. Kalimat/teks catatan di antara link otomatis disimpan ke tab <b class="text-white">📝 Catatan</b>!
+              </p>
+              <p>
+                3. Kategori otomatis memakai nama website (<b class="text-white">Eporner, Pornhub, YouTube</b>, dll).
+              </p>
+            </div>
           </div>
 
-          <div class="flex gap-2.5 pt-2">
+          <div class="flex gap-2.5 pt-1">
             <button
               type="button"
               id="btn-cancel-batch"
               data-ripple
-              class="ripple-container flex-1 min-h-[46px] bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 text-sm font-medium py-2.5 rounded-xl transition active:scale-95 touch-press"
+              class="ripple-container flex-1 min-h-[44px] bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 text-xs font-semibold py-2.5 rounded-xl transition active:scale-95 touch-press"
             >
               Batal
             </button>
@@ -685,7 +932,7 @@ Catatan lain https://site.com/video.mp4"
               id="btn-start-wizard"
               disabled
               data-ripple
-              class="ripple-container flex-1 min-h-[46px] bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 disabled:opacity-40 disabled:pointer-events-none hover:brightness-110 text-white text-sm font-semibold py-2.5 rounded-xl transition active:scale-95 touch-press shadow-lg shadow-indigo-500/30"
+              class="ripple-container flex-1 min-h-[44px] bg-gradient-to-r from-emerald-600 to-emerald-500 disabled:opacity-40 disabled:pointer-events-none hover:brightness-110 text-white text-xs font-bold py-2.5 rounded-xl transition active:scale-95 touch-press shadow-lg shadow-emerald-600/30"
             >
               Mulai Kategorisasi
             </button>
@@ -693,27 +940,32 @@ Catatan lain https://site.com/video.mp4"
         </div>
 
         <!-- VIEW 3: Step-by-Step Categorization Wizard -->
-        <div id="view-wizard" class="hidden space-y-4 animate-wizard-step">
+        <div id="view-wizard" class="hidden space-y-3.5 animate-wizard-step">
           <!-- Wizard Progress Bar Header -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-white flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                Link <span id="wizard-curr-idx">1</span> dari <span id="wizard-total-count">10</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                Link <span id="wizard-curr-idx">1</span> dari
+                <span id="wizard-total-count">10</span>
               </span>
-              <span id="wizard-percent" class="text-zinc-400 font-mono text-[11px]">10%</span>
+              <span id="wizard-percent" class="text-emerald-400 font-mono text-[11px]"
+                >10%</span
+              >
             </div>
             <div class="w-full h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
               <div
                 id="wizard-progress-bar"
-                class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300 w-[10%]"
+                class="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-300 w-[10%]"
               ></div>
             </div>
           </div>
 
           <!-- Active Link Scraped Card Preview -->
-          <div class="glass-panel rounded-2xl p-3 space-y-2.5 border border-white/10">
-            <div class="relative aspect-video rounded-xl overflow-hidden bg-zinc-950 flex items-center justify-center">
+          <div class="liquid-glass-card rounded-2xl p-3 space-y-2 border border-white/10">
+            <div
+              class="relative aspect-video rounded-xl overflow-hidden bg-zinc-950 flex items-center justify-center"
+            >
               <img
                 id="wizard-thumb-img"
                 class="w-full h-full object-cover"
@@ -722,66 +974,91 @@ Catatan lain https://site.com/video.mp4"
               />
               <div
                 id="wizard-loading-overlay"
-                class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-2 text-xs font-medium text-indigo-300"
+                class="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center gap-2 text-xs font-medium text-emerald-300"
               >
-                <span class="w-4 h-4 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin"></span>
-                <span>Mengambil data...</span>
+                <span
+                  class="w-4 h-4 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin"
+                ></span>
+                <span>Mengambil metadata…</span>
               </div>
             </div>
             <div class="space-y-1">
-              <h4 id="wizard-title-text" class="text-sm font-semibold text-white line-clamp-2 leading-snug">
-                Memuat info video...
+              <h4
+                id="wizard-title-text"
+                class="text-sm font-semibold text-white line-clamp-2 leading-snug"
+              >
+                Memuat info video…
               </h4>
-              <p id="wizard-url-text" class="text-[11px] text-zinc-500 truncate font-mono"></p>
+              <p
+                id="wizard-url-text"
+                class="text-[11px] text-zinc-500 truncate font-mono"
+              ></p>
             </div>
           </div>
 
-          <!-- 1-Tap Category Quick Pick Chips -->
+          <!-- Auto-Domain Category Highlight (1-Ketukan Simpan) -->
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block"
+                >Kategori Otomatis:</span
+              >
+              <span id="wizard-auto-cat-label" class="text-sm font-bold text-white"
+                >Eporner</span
+              >
+            </div>
+            <button
+              type="button"
+              id="btn-wizard-confirm-auto"
+              data-ripple
+              class="ripple-container px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 active:scale-95 touch-press transition shadow-md shadow-emerald-600/30"
+            >
+              <span>Simpan & Lanjut</span>
+              <span>➜</span>
+            </button>
+          </div>
+
+          <!-- 1-Tap Category Quick Pick Chips (Alternative categories) -->
           <div>
-            <label class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-2">
-              Pilih Kategori Cepat (1-Tap):
+            <label
+              class="block text-[10.5px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
+            >
+              Atau Pilih Kategori Lain (1-Tap):
             </label>
             <div
               id="wizard-category-chips"
-              class="flex flex-wrap gap-2 max-h-36 overflow-y-auto no-scrollbar p-0.5"
-            >
-              <!-- Dinamis diisi chip kategori -->
-            </div>
+              class="flex flex-wrap gap-2 max-h-28 overflow-y-auto no-scrollbar p-0.5"
+            ></div>
           </div>
 
           <!-- Or Create New Category Input -->
           <div>
-            <label
-              for="wizard-new-cat"
-              class="block text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
-              >Atau Kategori Baru:</label
-            >
             <div class="flex gap-2">
               <input
                 type="text"
                 id="wizard-new-cat"
-                placeholder="Ketik kategori baru..."
-                class="flex-1 h-10 bg-white/[0.04] border border-white/10 rounded-xl px-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500/60 transition"
+                placeholder="Ketik kategori baru…"
+                class="flex-1 h-9 bg-white/[0.04] border border-white/10 rounded-xl px-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 transition"
               />
               <button
                 type="button"
                 id="btn-wizard-save-new"
                 data-ripple
-                class="ripple-container px-3.5 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 font-semibold text-xs flex items-center gap-1 active:scale-95 touch-press transition flex-shrink-0"
+                class="ripple-container px-3 h-9 rounded-xl bg-white/[0.08] hover:bg-white/15 text-zinc-200 font-semibold text-xs flex items-center gap-1 active:scale-95 touch-press transition flex-shrink-0"
               >
-                <span>Simpan</span>
-                <span>➜</span>
+                <span>Pakai Ini</span>
               </button>
             </div>
           </div>
 
           <!-- Wizard Actions (Skip / Finish) -->
-          <div class="flex items-center justify-between pt-2 border-t border-white/[0.08]">
+          <div
+            class="flex items-center justify-between pt-1 border-t border-white/[0.08]"
+          >
             <button
               type="button"
               id="btn-wizard-skip"
               data-ripple
-              class="ripple-container text-xs text-zinc-400 hover:text-white py-2 px-3 rounded-lg hover:bg-white/5 active:scale-95 touch-press transition"
+              class="ripple-container text-xs text-zinc-400 hover:text-white py-1.5 px-2.5 rounded-lg hover:bg-white/5 active:scale-95 touch-press transition"
             >
               Lewati Link Ini ↷
             </button>
@@ -789,19 +1066,125 @@ Catatan lain https://site.com/video.mp4"
               type="button"
               id="btn-wizard-finish"
               data-ripple
-              class="ripple-container text-xs text-zinc-400 hover:text-rose-400 py-2 px-3 rounded-lg hover:bg-rose-500/10 active:scale-95 touch-press transition"
+              class="ripple-container text-xs text-zinc-400 hover:text-rose-400 py-1.5 px-2.5 rounded-lg hover:bg-rose-500/10 active:scale-95 touch-press transition"
             >
-              Batalkan Sisa Wizard
+              Selesai Sekarang
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Quick Action Bottom Sheet -->
+    <!-- =========================================================
+         MODAL 2: Catatan Pribadi Editor (Vault Notes)
+         ========================================================= -->
+    <div
+      id="note-modal-backdrop"
+      class="fixed inset-0 z-[90] bg-black/85 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300"
+    ></div>
+    <div
+      id="modal-note"
+      class="fixed inset-0 z-[95] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none"
+    >
+      <div
+        id="note-modal-panel"
+        class="relative w-full sm:max-w-md liquid-glass border-t sm:border border-white/15 rounded-t-[28px] sm:rounded-3xl p-5 shadow-2xl scale-95 opacity-0 transition-all duration-300 max-h-[92vh] overflow-y-auto pb-safe"
+      >
+        <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3 sm:hidden"></div>
+
+        <div
+          class="flex items-center justify-between border-b border-white/[0.08] pb-3 mb-3.5"
+        >
+          <h3 id="note-modal-title" class="font-bold text-base text-white">
+            Catatan Pribadi
+          </h3>
+          <button
+            id="btn-close-note-modal"
+            data-ripple
+            class="ripple-container w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/[0.08] active:scale-90 touch-press transition"
+            aria-label="Tutup"
+          >
+            <svg
+              class="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form id="note-form" class="space-y-3.5">
+          <input type="hidden" id="note-id" />
+          <div>
+            <label
+              for="note-title-input"
+              class="block text-[10.5px] font-semibold text-emerald-400 uppercase tracking-wider mb-1.5"
+              >Judul Catatan</label
+            >
+            <input
+              type="text"
+              id="note-title-input"
+              required
+              class="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl px-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all"
+              placeholder="Contoh: Daftar Artis Favorit / Catatan Link"
+            />
+          </div>
+
+          <div>
+            <label
+              for="note-content-input"
+              class="block text-[10.5px] font-semibold text-zinc-400 uppercase tracking-wider mb-1.5"
+              >Isi Catatan</label
+            >
+            <textarea
+              id="note-content-input"
+              rows="7"
+              class="w-full bg-white/[0.04] border border-white/10 rounded-2xl p-3.5 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 focus:bg-white/[0.07] focus:ring-4 focus:ring-emerald-500/15 transition-all resize-none leading-relaxed"
+              placeholder="Tulis catatan bebas di sini..."
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <button
+              type="button"
+              id="btn-delete-note"
+              class="hidden text-xs text-rose-400 hover:text-rose-300 font-semibold py-2 px-3 rounded-lg hover:bg-rose-500/10 active:scale-95 touch-press transition"
+            >
+              Hapus
+            </button>
+            <div class="flex gap-2 ml-auto">
+              <button
+                type="button"
+                id="btn-cancel-note"
+                data-ripple
+                class="ripple-container min-h-[42px] px-4 bg-white/[0.05] hover:bg-white/10 border border-white/10 text-zinc-300 text-xs font-semibold rounded-xl transition active:scale-95 touch-press"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                data-ripple
+                class="ripple-container min-h-[42px] px-5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:brightness-110 text-white text-xs font-bold rounded-xl transition active:scale-95 touch-press shadow-lg shadow-emerald-600/30"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         MODAL 3: Quick Action Bottom Sheet (Video Card)
+         ========================================================= -->
     <div
       id="sheet-backdrop"
-      class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
+      class="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300"
     ></div>
     <div
       id="bottom-sheet"
@@ -809,7 +1192,7 @@ Catatan lain https://site.com/video.mp4"
       style="transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1)"
     >
       <div
-        class="mx-auto max-w-2xl bg-[#121217]/95 backdrop-blur-2xl border-t border-white/10 rounded-t-[28px] px-4 pt-3 pb-safe shadow-2xl shadow-black/80"
+        class="mx-auto max-w-2xl liquid-glass border-t border-white/15 rounded-t-[28px] px-4 pt-3 pb-safe shadow-2xl shadow-black/90"
       >
         <div class="w-10 h-1 rounded-full bg-white/20 mx-auto mb-3"></div>
         <div
@@ -827,10 +1210,10 @@ Catatan lain https://site.com/video.mp4"
           <button
             id="sheet-preview"
             data-ripple
-            class="sheet-item ripple-container w-full min-h-[48px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
+            class="sheet-item ripple-container w-full min-h-[46px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
           >
             <span
-              class="w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center flex-shrink-0"
+              class="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0"
               ><svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
                 <path
                   d="M6 4.2c0-.9.98-1.44 1.73-.96l12.4 7.8a1.14 1.14 0 0 1 0 1.92l-12.4 7.8A1.14 1.14 0 0 1 6 19.8V4.2Z"
@@ -838,11 +1221,11 @@ Catatan lain https://site.com/video.mp4"
             ></span>
             <span class="text-sm font-medium text-zinc-200">Putar Pratinjau Video</span>
           </button>
-          
+
           <button
             id="sheet-copy"
             data-ripple
-            class="sheet-item ripple-container w-full min-h-[48px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
+            class="sheet-item ripple-container w-full min-h-[46px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
           >
             <span
               class="w-9 h-9 rounded-xl bg-white/[0.05] text-zinc-300 flex items-center justify-center flex-shrink-0"
@@ -866,7 +1249,7 @@ Catatan lain https://site.com/video.mp4"
           <button
             id="sheet-edit"
             data-ripple
-            class="sheet-item ripple-container w-full min-h-[48px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
+            class="sheet-item ripple-container w-full min-h-[46px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-white/[0.08] touch-press transition text-left"
           >
             <span
               class="w-9 h-9 rounded-xl bg-white/[0.05] text-zinc-300 flex items-center justify-center flex-shrink-0"
@@ -882,13 +1265,13 @@ Catatan lain https://site.com/video.mp4"
                 <path d="M12 20h9" />
                 <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg
             ></span>
-            <span class="text-sm font-medium text-zinc-200">Edit Judul / Data Video</span>
+            <span class="text-sm font-medium text-zinc-200">Edit Judul / Kategori</span>
           </button>
 
           <button
             id="sheet-delete"
             data-ripple
-            class="sheet-item ripple-container w-full min-h-[48px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-rose-500/15 touch-press transition text-left"
+            class="sheet-item ripple-container w-full min-h-[46px] flex items-center gap-3.5 px-3 py-2.5 rounded-xl active:bg-rose-500/15 touch-press transition text-left"
           >
             <span
               class="w-9 h-9 rounded-xl bg-rose-500/15 flex items-center justify-center text-rose-400 flex-shrink-0"
@@ -913,14 +1296,16 @@ Catatan lain https://site.com/video.mp4"
         <button
           id="sheet-cancel"
           data-ripple
-          class="ripple-container w-full min-h-[46px] mt-2 mb-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-sm font-semibold text-zinc-300 active:scale-[0.98] touch-press transition"
+          class="ripple-container w-full min-h-[44px] mt-2 mb-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] text-xs font-semibold text-zinc-300 active:scale-[0.98] touch-press transition"
         >
           Batal
         </button>
       </div>
     </div>
 
-    <!-- Preview Modal -->
+    <!-- =========================================================
+         MODAL 4: Universal Video Preview Player
+         ========================================================= -->
     <div
       id="preview-modal"
       class="fixed inset-0 z-[80] hidden items-center justify-center p-0 sm:p-4"
@@ -934,7 +1319,7 @@ Catatan lain https://site.com/video.mp4"
         class="relative w-full sm:max-w-lg sm:rounded-2xl overflow-hidden bg-black scale-95 opacity-0 transition-all duration-300 shadow-2xl border border-white/10"
       >
         <div
-          class="flex items-center justify-between px-4 py-3 bg-[#121217]/95 backdrop-blur-md border-b border-white/10"
+          class="flex items-center justify-between px-4 py-3 bg-[#141110]/95 backdrop-blur-md border-b border-white/10"
         >
           <h3
             id="preview-title"
@@ -972,7 +1357,7 @@ Catatan lain https://site.com/video.mp4"
             href="#"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 text-sm text-indigo-400 font-semibold hover:underline"
+            class="inline-flex items-center gap-2 text-sm text-emerald-400 font-semibold hover:underline"
           >
             Buka di Browser Luar
             <svg

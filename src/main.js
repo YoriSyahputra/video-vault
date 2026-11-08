@@ -2,19 +2,23 @@ import Dexie from "dexie";
 import { CapacitorHttp } from "@capacitor/core";
 
 /* =========================================================
-   Database
+   Database (Version 2 Migration with Notes Store)
    ========================================================= */
 const db = new Dexie("VideoVaultDB");
 db.version(1).stores({
   videos: "++id, title, url, category, createdAt",
+});
+db.version(2).stores({
+  videos: "++id, title, url, category, createdAt",
+  notes: "++id, title, content, createdAt, updatedAt",
 });
 
 /* =========================================================
    Constants & helpers
    ========================================================= */
 const PAGE_SIZE = 8;
-const FALLBACK_THUMB = "https://placehold.co/600x340/121217/52525b?text=No+Thumbnail";
-const ERROR_THUMB = "https://placehold.co/600x340/121217/52525b?text=Gagal+Memuat";
+const FALLBACK_THUMB = "https://placehold.co/600x340/141110/4ade80?text=Video+Vault";
+const ERROR_THUMB = "https://placehold.co/600x340/141110/71717a?text=Cover+Video";
 
 const ICON_PATHS = {
   play: '<path d="M6 4.2c0-.9.98-1.44 1.73-.96l12.4 7.8a1.14 1.14 0 0 1 0 1.92l-12.4 7.8A1.14 1.14 0 0 1 6 19.8V4.2Z" />',
@@ -30,6 +34,8 @@ const ICON_PATHS = {
   checkCircle: '<circle cx="12" cy="12" r="9" /><path d="m8.5 12.5 2.5 2.5 5-5" />',
   alertCircle: '<circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" />',
   clock: '<circle cx="12" cy="12" r="9" /><path d="M12 6v6l4 2" />',
+  note: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
 };
 
 function icon(name, cls = "w-4 h-4") {
@@ -67,6 +73,32 @@ function timeAgo(dateStr) {
 }
 
 /* =========================================================
+   Auto-Domain Category Extractor
+   ========================================================= */
+function getDomainCategory(url) {
+  if (!url) return "Umum";
+  try {
+    const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    if (hostname.includes("youtu")) return "YouTube";
+    if (hostname.includes("pornhub")) return "Pornhub";
+    if (hostname.includes("spankbang")) return "Spankbang";
+    if (hostname.includes("xvideos")) return "Xvideos";
+    if (hostname.includes("eporner")) return "Eporner";
+    if (hostname.includes("tnaflix")) return "Tnaflix";
+    if (hostname.includes("vimeo")) return "Vimeo";
+    if (hostname.includes("tiktok")) return "TikTok";
+    const parts = hostname.split(".");
+    let domainPart = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+    if (domainPart.length <= 2 && parts.length >= 3) {
+      domainPart = parts[parts.length - 3];
+    }
+    return domainPart.charAt(0).toUpperCase() + domainPart.slice(1);
+  } catch (_) {
+    return "Web";
+  }
+}
+
+/* =========================================================
    Platform & Embed Resolvers
    ========================================================= */
 function getYouTubeId(url) {
@@ -89,6 +121,18 @@ function getXvideosId(url) {
   return match ? match[1] || match[2] : null;
 }
 
+function getSpankbangId(url) {
+  if (!url) return null;
+  const match = url.match(/spankbang\.(?:com|party|site)\/([a-zA-Z0-9]+)\/video/i);
+  return match ? match[1] : null;
+}
+
+function getEpornerId(url) {
+  if (!url) return null;
+  const match = url.match(/eporner\.com\/video-([a-zA-Z0-9]+)/i);
+  return match ? match[1] : null;
+}
+
 function isDirectVideo(url) {
   return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url || "");
 }
@@ -107,6 +151,14 @@ function resolveEmbed(url) {
   if (xvId) {
     return { type: "xvideos", embedUrl: `https://www.xvideos.com/embedframe/${xvId}` };
   }
+  const sbId = getSpankbangId(url);
+  if (sbId) {
+    return { type: "spankbang", embedUrl: `https://spankbang.com/${sbId}/embed/` };
+  }
+  const epId = getEpornerId(url);
+  if (epId) {
+    return { type: "eporner", embedUrl: `https://www.eporner.com/embed/${epId}/` };
+  }
   if (isDirectVideo(url)) {
     return { type: "direct", embedUrl: url };
   }
@@ -114,35 +166,57 @@ function resolveEmbed(url) {
 }
 
 /* =========================================================
-   Universal Metadata Scraper
+   Smart URL Slug Fallback (Bila Halaman Diblokir Jaringan/ISP)
    ========================================================= */
-function cleanTitle(rawTitle) {
-  if (!rawTitle) return "";
-  return rawTitle
-    .replace(/\s*[-–|•]\s*(?:YouTube|Pornhub(?:\.com)?|XVIDEOS(?:\.COM)?|TnaFlix|SpankBang|Vimeo|Dailymotion|TikTok).*$/i, "")
-    .replace(/^Video\s*:\s*/i, "")
+function formatSlug(slug) {
+  return decodeURIComponent(slug)
+    .replace(/[-_+]/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
     .trim();
 }
 
-function getDomainName(url) {
+function extractSlugTitle(url) {
+  if (!url) return "";
   try {
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    const parts = host.split(".");
-    if (parts.length > 0) {
-      const name = parts[0];
-      return name.charAt(0).toUpperCase() + name.slice(1);
+    const u = new URL(url);
+    const pathname = u.pathname;
+    let m = pathname.match(/\/video-[^\/]+\/([^\/?#]+)/i);
+    if (m && m[1]) return formatSlug(m[1]);
+    m = pathname.match(/\/video\/([^\/?#]+)/i);
+    if (m && m[1]) return formatSlug(m[1]);
+    const segs = pathname.split("/").filter(Boolean);
+    if (segs.length > 0) {
+      const last = segs[segs.length - 1];
+      if (last && !/^\d+$/.test(last) && last !== "view_video.php") {
+        return formatSlug(last);
+      }
     }
   } catch (_) {
     /* no-op */
   }
-  return "Web";
+  return "";
 }
 
+function cleanTitle(rawTitle) {
+  if (!rawTitle) return "";
+  return rawTitle
+    .replace(/\s*[-–|•]\s*(?:YouTube|Pornhub(?:\.com)?|XVIDEOS(?:\.COM)?|TnaFlix|SpankBang|EPORNER|Vimeo|Dailymotion|TikTok).*$/i, "")
+    .replace(/^Video\s*:\s*/i, "")
+    .trim();
+}
+
+/* =========================================================
+   Universal Metadata Scraper
+   ========================================================= */
 async function fetchMetadata(targetUrl) {
+  const domainCat = getDomainCategory(targetUrl);
+  const slugTitle = extractSlugTitle(targetUrl);
+
   const result = {
-    title: "",
-    thumbnail: "",
-    category: getDomainName(targetUrl),
+    title: slugTitle || `Video dari ${domainCat}`,
+    thumbnail: FALLBACK_THUMB,
+    category: domainCat,
   };
 
   const ytId = getYouTubeId(targetUrl);
@@ -173,13 +247,15 @@ async function fetchMetadata(targetUrl) {
     return result;
   }
 
-  // Scrape using CapacitorHttp (Native Android CORS bypass)
+  // Scrape using CapacitorHttp with Age Verification Cookie Bypass
   try {
     const response = await CapacitorHttp.get({
       url: targetUrl,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Cookie: "age_verified=1; platform=pc; accessAgeDisclaimerPH=1; has_visited=1",
+        Referer: targetUrl,
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
@@ -194,7 +270,7 @@ async function fetchMetadata(targetUrl) {
         doc.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
         doc.querySelector('meta[name="twitter:title"]')?.getAttribute("content") ||
         doc.querySelector("title")?.textContent;
-      if (ogTitle) {
+      if (ogTitle && ogTitle.trim()) {
         result.title = cleanTitle(ogTitle);
       }
 
@@ -222,24 +298,55 @@ async function fetchMetadata(targetUrl) {
     console.warn("CapacitorHttp scrape notice:", err);
   }
 
-  if (!result.title) {
-    try {
-      const pathSeg = new URL(targetUrl).pathname.split("/").filter(Boolean).pop();
-      result.title = pathSeg ? decodeURIComponent(pathSeg).replace(/[-_]/g, " ") : `Video dari ${result.category}`;
-    } catch (_) {
-      result.title = `Video dari ${result.category}`;
+  return result;
+}
+
+/* =========================================================
+   Smart Mixed Text Parser (Keep Notes Importer)
+   ========================================================= */
+function parseImportText(rawText) {
+  if (!rawText) return { urls: [], notes: "" };
+  let s = rawText.replace(/([^\s])(https?:\/\/)/gi, "$1 $2");
+  s = s.replace(/[\.\,\;\:\!\?\(\)\[\]\{\}\'\"\<\>]+(https?:\/\/)/gi, " $1");
+
+  const urlRegex = /https?:\/\/[^\s"'<>\n\r]+/gi;
+  const rawMatches = s.match(urlRegex) || [];
+  const urls = [];
+  const extraTextPieces = [];
+
+  rawMatches.forEach((u) => {
+    let clean = u.trim().replace(/[\.\,\;\:\!\?\)\}\]]+$/, "");
+    const stuckMatch = clean.match(
+      /^(https?:\/\/.+?\/(?:video|watch|embed)[^\/]*\/[^\/]+)\/([A-Z][a-zA-Z0-9]+.*)$/i
+    );
+    if (stuckMatch) {
+      clean = stuckMatch[1] + "/";
+      extraTextPieces.push(stuckMatch[2].replace(/[-_+]/g, " "));
     }
-  }
-  if (!result.thumbnail) {
-    result.thumbnail = FALLBACK_THUMB;
+    urls.push(clean);
+  });
+
+  // Extract non-URL text lines for Vault Notes
+  let textWithoutUrls = s.replace(/https?:\/\/[^\s"'<>\n\r]+/gi, " ");
+  const lines = textWithoutUrls
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0 && !/^[\.\,\;\:\!\?\-\_\=\+]+$/.test(l));
+
+  if (extraTextPieces.length > 0) {
+    lines.push(...extraTextPieces);
   }
 
-  return result;
+  return {
+    urls: [...new Set(urls)],
+    notes: lines.join("\n\n"),
+  };
 }
 
 /* =========================================================
    App state
    ========================================================= */
+let currentViewMode = "videos"; // 'videos' | 'notes'
 let allVideosCache = [];
 let filteredVideos = [];
 let currentCategory = "Semua";
@@ -248,7 +355,13 @@ let sortBy = "newest";
 let loadedCount = 0;
 let activeVideo = null;
 
-// Batch import wizard state
+// Notes state
+let allNotesCache = [];
+let filteredNotes = [];
+let searchNotesQuery = "";
+let activeEditingNoteId = null;
+
+// Batch wizard state
 let batchQueue = [];
 let batchIndex = 0;
 let sessionCategories = new Set();
@@ -257,6 +370,16 @@ let currentActiveScraped = null;
 /* =========================================================
    DOM references
    ========================================================= */
+const appIntroOverlay = document.getElementById("app-intro-overlay");
+const navBtnVideos = document.getElementById("nav-btn-videos");
+const navBtnNotes = document.getElementById("nav-btn-notes");
+const countNavVideos = document.getElementById("count-nav-videos");
+const countNavNotes = document.getElementById("count-nav-notes");
+
+const sectionVideos = document.getElementById("section-videos");
+const sectionNotes = document.getElementById("section-notes");
+
+// Videos DOM
 const videoGrid = document.getElementById("video-grid");
 const skeletonGrid = document.getElementById("skeleton-grid");
 const emptyState = document.getElementById("empty-state");
@@ -266,16 +389,17 @@ const emptySearchQuery = document.getElementById("empty-search-query");
 const btnResetFilters = document.getElementById("btn-reset-filters");
 const scrollSentinel = document.getElementById("scroll-sentinel");
 const loadingMore = document.getElementById("loading-more");
-
 const categoryFilters = document.getElementById("category-filters");
 const searchInput = document.getElementById("search-input");
 const btnClearSearch = document.getElementById("btn-clear-search");
 const videoCountEl = document.getElementById("video-count");
-
 const btnSort = document.getElementById("btn-sort");
 const sortPanel = document.getElementById("sort-panel");
 
+// Header Button '+'
 const btnOpenModal = document.getElementById("btn-open-modal");
+
+// Modal Add/Edit & Batch
 const modalBackdrop = document.getElementById("modal-backdrop");
 const modal = document.getElementById("modal");
 const modalPanel = document.getElementById("modal-panel");
@@ -286,7 +410,7 @@ const modalTabs = document.getElementById("modal-tabs");
 const tabBtnSingle = document.getElementById("tab-btn-single");
 const tabBtnBatch = document.getElementById("tab-btn-batch");
 
-// Single form view elements
+// Single Form View
 const viewSingle = document.getElementById("view-single");
 const videoForm = document.getElementById("video-form");
 const formId = document.getElementById("form-id");
@@ -302,14 +426,14 @@ const fetchSpinner = document.getElementById("fetch-spinner");
 const fetchIcon = document.getElementById("fetch-icon");
 const urlStatusHint = document.getElementById("url-status-hint");
 
-// Batch view elements
+// Batch View
 const viewBatch = document.getElementById("view-batch");
 const batchTextarea = document.getElementById("batch-textarea");
 const batchCountBadge = document.getElementById("batch-count-badge");
 const btnCancelBatch = document.getElementById("btn-cancel-batch");
 const btnStartWizard = document.getElementById("btn-start-wizard");
 
-// Wizard view elements
+// Wizard View
 const viewWizard = document.getElementById("view-wizard");
 const wizardCurrIdx = document.getElementById("wizard-curr-idx");
 const wizardTotalCount = document.getElementById("wizard-total-count");
@@ -319,11 +443,33 @@ const wizardThumbImg = document.getElementById("wizard-thumb-img");
 const wizardLoadingOverlay = document.getElementById("wizard-loading-overlay");
 const wizardTitleText = document.getElementById("wizard-title-text");
 const wizardUrlText = document.getElementById("wizard-url-text");
+const wizardAutoCatLabel = document.getElementById("wizard-auto-cat-label");
+const btnWizardConfirmAuto = document.getElementById("btn-wizard-confirm-auto");
 const wizardCategoryChips = document.getElementById("wizard-category-chips");
 const wizardNewCat = document.getElementById("wizard-new-cat");
 const btnWizardSaveNew = document.getElementById("btn-wizard-save-new");
 const btnWizardSkip = document.getElementById("btn-wizard-skip");
 const btnWizardFinish = document.getElementById("btn-wizard-finish");
+
+// Notes DOM
+const searchNotesInput = document.getElementById("search-notes-input");
+const btnNewNote = document.getElementById("btn-new-note");
+const notesGrid = document.getElementById("notes-grid");
+const emptyNotesState = document.getElementById("empty-notes-state");
+const btnEmptyAddNote = document.getElementById("btn-empty-add-note");
+
+// Modal Note Editor
+const noteModalBackdrop = document.getElementById("note-modal-backdrop");
+const modalNote = document.getElementById("modal-note");
+const noteModalPanel = document.getElementById("note-modal-panel");
+const noteModalTitle = document.getElementById("note-modal-title");
+const btnCloseNoteModal = document.getElementById("btn-close-note-modal");
+const noteForm = document.getElementById("note-form");
+const noteId = document.getElementById("note-id");
+const noteTitleInput = document.getElementById("note-title-input");
+const noteContentInput = document.getElementById("note-content-input");
+const btnDeleteNote = document.getElementById("btn-delete-note");
+const btnCancelNote = document.getElementById("btn-cancel-note");
 
 // Bottom sheet elements
 const sheetBackdrop = document.getElementById("sheet-backdrop");
@@ -347,6 +493,22 @@ const previewExternalLink = document.getElementById("preview-external-link");
 const btnClosePreview = document.getElementById("btn-close-preview");
 
 const toastContainer = document.getElementById("toast-container");
+
+/* =========================================================
+   3D Realistic Intro Screen Logic
+   ========================================================= */
+function dismissIntro() {
+  if (!appIntroOverlay) return;
+  appIntroOverlay.classList.add("intro-dismissing");
+  setTimeout(() => {
+    appIntroOverlay.remove();
+  }, 500);
+}
+
+if (appIntroOverlay) {
+  appIntroOverlay.addEventListener("click", dismissIntro);
+  setTimeout(dismissIntro, 1900);
+}
 
 /* =========================================================
    Ripple (global pointerdown delegation)
@@ -379,7 +541,7 @@ const TOAST_STYLES = {
 function showToast(message, type = "success") {
   const style = TOAST_STYLES[type] || TOAST_STYLES.success;
   const toast = document.createElement("div");
-  toast.className = `toast pointer-events-auto flex items-center gap-3 bg-[#121217]/95 backdrop-blur-xl border ${style.border} rounded-2xl pl-3 pr-4 py-3 shadow-2xl shadow-black/60 max-w-[calc(100vw-2rem)]`;
+  toast.className = `toast pointer-events-auto flex items-center gap-3 liquid-glass border ${style.border} rounded-2xl pl-3 pr-4 py-3 shadow-2xl shadow-black/80 max-w-[calc(100vw-2rem)]`;
   toast.innerHTML = `
     <span class="w-8 h-8 rounded-xl ${style.bg} ${style.text} flex items-center justify-center flex-shrink-0">${icon(
     style.i,
@@ -396,12 +558,38 @@ function showToast(message, type = "success") {
 }
 
 /* =========================================================
-   Overlay open/close helpers & Tab Switchers
+   Navigation Switcher (Videos vs Notes)
+   ========================================================= */
+function switchViewMode(mode) {
+  currentViewMode = mode;
+  if (mode === "videos") {
+    navBtnVideos.className =
+      "ripple-container flex-1 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+    navBtnNotes.className =
+      "ripple-container flex-1 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+    sectionVideos.classList.remove("hidden");
+    sectionNotes.classList.add("hidden");
+  } else {
+    navBtnNotes.className =
+      "ripple-container flex-1 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+    navBtnVideos.className =
+      "ripple-container flex-1 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+    sectionNotes.classList.remove("hidden");
+    sectionVideos.classList.add("hidden");
+    reloadNotes();
+  }
+}
+
+navBtnVideos.addEventListener("click", () => switchViewMode("videos"));
+navBtnNotes.addEventListener("click", () => switchViewMode("notes"));
+
+/* =========================================================
+   Modal Switchers & Open/Close Helpers
    ========================================================= */
 function switchModalTab(tabName) {
   if (tabName === "single") {
     tabBtnSingle.className =
-      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm transition-all";
+      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm transition-all";
     tabBtnBatch.className =
       "py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-lg transition-all";
     viewSingle.classList.remove("hidden");
@@ -409,7 +597,7 @@ function switchModalTab(tabName) {
     viewWizard.classList.add("hidden");
   } else if (tabName === "batch") {
     tabBtnBatch.className =
-      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm transition-all";
+      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm transition-all";
     tabBtnSingle.className =
       "py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-lg transition-all";
     viewBatch.classList.remove("hidden");
@@ -502,7 +690,13 @@ function openPreview(video) {
 
   const embed = resolveEmbed(video.url);
 
-  if (embed.type === "youtube" || embed.type === "pornhub" || embed.type === "xvideos") {
+  if (
+    embed.type === "youtube" ||
+    embed.type === "pornhub" ||
+    embed.type === "xvideos" ||
+    embed.type === "spankbang" ||
+    embed.type === "eporner"
+  ) {
     previewContent.innerHTML = `<iframe class="w-full h-full" src="${embed.embedUrl}" title="${escapeHtml(
       video.title
     )}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
@@ -528,7 +722,7 @@ function closePreview() {
   setTimeout(() => {
     previewModal.classList.add("hidden");
     previewModal.classList.remove("flex");
-    previewContent.innerHTML = ""; // stop playback
+    previewContent.innerHTML = "";
   }, 300);
 }
 
@@ -582,7 +776,7 @@ async function copyLink(url, btnEl) {
 }
 
 /* =========================================================
-   Category datalist & thumbnail preview (form)
+   Category Datalist & Helpers
    ========================================================= */
 function getAllCategories() {
   const cats = new Set(["Semua"]);
@@ -618,15 +812,21 @@ thumbPreviewImg.addEventListener("error", () => {
 });
 
 /* =========================================================
-   Single Form Auto-Scrape Handler
+   Single Form Auto-Scrape & Auto-Domain Category Handler
    ========================================================= */
 async function handleAutoScrapeSingle() {
   const url = formUrl.value.trim();
   if (!url || !/^https?:\/\//i.test(url)) return;
 
+  // Auto populate domain category immediately!
+  const autoCat = getDomainCategory(url);
+  if (!formCategory.value.trim()) {
+    formCategory.value = autoCat;
+  }
+
   fetchSpinner.classList.remove("hidden");
   fetchIcon.classList.add("hidden");
-  urlStatusHint.textContent = "Mengambil data...";
+  urlStatusHint.textContent = "Mengambil data…";
 
   try {
     const meta = await fetchMetadata(url);
@@ -640,7 +840,7 @@ async function handleAutoScrapeSingle() {
     if (!formCategory.value.trim() && meta.category) {
       formCategory.value = meta.category;
     }
-    urlStatusHint.textContent = "Data terisi ✨";
+    urlStatusHint.textContent = `Auto: ${formCategory.value || autoCat} ✨`;
     showToast("Metadata berhasil diambil!", "success");
   } catch (err) {
     console.error(err);
@@ -660,28 +860,54 @@ formUrl.addEventListener("change", () => {
 });
 
 /* =========================================================
-   Batch Link Extractor & Wizard Implementation
+   Batch Link Importer & Wizard (Auto-Note Saving)
    ========================================================= */
-function extractUrls(text) {
-  if (!text) return [];
-  const matches = text.match(/https?:\/\/[^\s"'<>\n\r]+/gi) || [];
-  return [...new Set(matches.map((u) => u.trim()))];
-}
+let batchParsedNotes = "";
 
 batchTextarea.addEventListener("input", () => {
-  const urls = extractUrls(batchTextarea.value);
-  batchCountBadge.textContent = `${urls.length} link terdeteksi`;
-  btnStartWizard.disabled = urls.length === 0;
-  btnStartWizard.textContent = urls.length > 0 ? `Mulai Kategorisasi (${urls.length} Link)` : "Mulai Kategorisasi";
+  const parsed = parseImportText(batchTextarea.value);
+  const urlCount = parsed.urls.length;
+  const noteLines = parsed.notes ? parsed.notes.split("\n\n").length : 0;
+
+  batchParsedNotes = parsed.notes;
+
+  batchCountBadge.textContent = `${urlCount} link & ${noteLines} catatan teks`;
+  btnStartWizard.disabled = urlCount === 0 && noteLines === 0;
+  btnStartWizard.textContent =
+    urlCount > 0 ? `Mulai Kategorisasi (${urlCount} Link)` : noteLines > 0 ? "Simpan Catatan Teks" : "Mulai Kategorisasi";
 });
 
 btnCancelBatch.addEventListener("click", closeModal);
 
-btnStartWizard.addEventListener("click", () => {
-  const urls = extractUrls(batchTextarea.value);
-  if (urls.length === 0) return;
+btnStartWizard.addEventListener("click", async () => {
+  const parsed = parseImportText(batchTextarea.value);
 
-  batchQueue = urls;
+  // Auto-Save non-URL text to Vault Notes!
+  if (parsed.notes && parsed.notes.trim()) {
+    try {
+      const firstLine = parsed.notes.split("\n")[0].substring(0, 40);
+      const title = firstLine || `Catatan Import (${new Date().toLocaleDateString("id-ID")})`;
+      await db.notes.add({
+        title: title,
+        content: parsed.notes,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      showToast("Teks non-link berhasil disimpan ke 📝 Catatan!", "success");
+      reloadNotes();
+    } catch (e) {
+      console.warn("Auto save note error:", e);
+    }
+  }
+
+  if (parsed.urls.length === 0) {
+    // Only notes were imported
+    closeModal();
+    switchViewMode("notes");
+    return;
+  }
+
+  batchQueue = parsed.urls;
   batchIndex = 0;
 
   modalTabs.classList.add("hidden");
@@ -694,8 +920,7 @@ btnStartWizard.addEventListener("click", () => {
 
 async function loadWizardItem(index) {
   if (index >= batchQueue.length) {
-    // Finished all items!
-    showToast(`${batchQueue.length} video berhasil ditambahkan!`, "success");
+    showToast(`${batchQueue.length} video berhasil disimpan ke vault!`, "success");
     closeModal();
     await reloadVideos();
     return;
@@ -712,13 +937,18 @@ async function loadWizardItem(index) {
   wizardProgressBar.style.width = `${pct}%`;
 
   wizardUrlText.textContent = currentUrl;
-  wizardTitleText.textContent = "Mengambil judul video...";
+  wizardTitleText.textContent = "Mengambil metadata video…";
   wizardThumbImg.src = FALLBACK_THUMB;
   wizardLoadingOverlay.classList.remove("hidden");
   wizardNewCat.value = "";
 
-  // Render Category Quick Pick Chips
-  renderWizardCategoryChips();
+  // Auto Domain Category set immediately!
+  const autoDomainCat = getDomainCategory(currentUrl);
+  wizardAutoCatLabel.textContent = autoDomainCat;
+  sessionCategories.add(autoDomainCat);
+
+  // Render alternative category chips
+  renderWizardCategoryChips(autoDomainCat);
 
   // Scrape current link
   try {
@@ -727,15 +957,16 @@ async function loadWizardItem(index) {
     wizardThumbImg.src = currentActiveScraped.thumbnail || FALLBACK_THUMB;
     wizardThumbImg.onerror = () => (wizardThumbImg.src = ERROR_THUMB);
     if (currentActiveScraped.category) {
+      wizardAutoCatLabel.textContent = currentActiveScraped.category;
       sessionCategories.add(currentActiveScraped.category);
-      renderWizardCategoryChips();
+      renderWizardCategoryChips(currentActiveScraped.category);
     }
   } catch (err) {
     console.error(err);
     currentActiveScraped = {
-      title: currentUrl,
+      title: extractSlugTitle(currentUrl) || currentUrl,
       thumbnail: FALLBACK_THUMB,
-      category: "Umum",
+      category: autoDomainCat,
     };
     wizardTitleText.textContent = currentActiveScraped.title;
   } finally {
@@ -743,10 +974,10 @@ async function loadWizardItem(index) {
   }
 }
 
-function renderWizardCategoryChips() {
-  const categories = getAllCategories().filter((c) => c !== "Semua");
+function renderWizardCategoryChips(currentAutoCat = "") {
+  const categories = getAllCategories().filter((c) => c !== "Semua" && c !== currentAutoCat);
   if (categories.length === 0) {
-    wizardCategoryChips.innerHTML = `<span class="text-xs text-zinc-500 italic">Belum ada kategori. Silakan buat di bawah.</span>`;
+    wizardCategoryChips.innerHTML = `<span class="text-xs text-zinc-500 italic">Kategori otomatis di atas sudah siap disimpan.</span>`;
     return;
   }
 
@@ -754,7 +985,7 @@ function renderWizardCategoryChips() {
     .map((cat) => {
       return `<button type="button" data-cat="${escapeHtml(
         cat
-      )}" data-ripple class="btn-wiz-chip ripple-container px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-indigo-500/25 hover:border-indigo-500/40 border border-white/10 text-xs font-medium text-zinc-200 active:scale-95 touch-press transition">${escapeHtml(
+      )}" data-ripple class="btn-wiz-chip ripple-container px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-emerald-500/20 hover:border-emerald-500/40 border border-white/10 text-xs font-medium text-zinc-200 active:scale-95 touch-press transition">${escapeHtml(
         cat
       )}</button>`;
     })
@@ -762,7 +993,7 @@ function renderWizardCategoryChips() {
 }
 
 async function saveCurrentWizardItem(category) {
-  const selectedCategory = (category || "").trim() || "Umum";
+  const selectedCategory = (category || "").trim() || wizardAutoCatLabel.textContent || "Umum";
   sessionCategories.add(selectedCategory);
 
   const payload = {
@@ -782,11 +1013,16 @@ async function saveCurrentWizardItem(category) {
   // Next item with smooth animation
   batchIndex++;
   viewWizard.classList.remove("animate-wizard-step");
-  void viewWizard.offsetWidth; // trigger reflow
+  void viewWizard.offsetWidth;
   viewWizard.classList.add("animate-wizard-step");
 
   loadWizardItem(batchIndex);
 }
+
+// Confirm Auto-Category Button
+btnWizardConfirmAuto.addEventListener("click", () => {
+  saveCurrentWizardItem(wizardAutoCatLabel.textContent);
+});
 
 // 1-Tap Category Chip Click
 wizardCategoryChips.addEventListener("click", (e) => {
@@ -819,7 +1055,7 @@ btnWizardSkip.addEventListener("click", () => {
   loadWizardItem(batchIndex);
 });
 
-// Finish / Cancel rest
+// Finish button
 btnWizardFinish.addEventListener("click", async () => {
   if (batchIndex > 0) {
     showToast(`${batchIndex} video tersimpan ke vault`, "success");
@@ -831,45 +1067,42 @@ btnWizardFinish.addEventListener("click", async () => {
 });
 
 /* =========================================================
-   Rendering: categories
+   Rendering: Video Cards & Categories
    ========================================================= */
 function renderCategories() {
   const categories = getAllCategories();
   categoryFilters.innerHTML = categories
     .map((cat) => {
       const active = currentCategory === cat;
-      return `<button data-category="${escapeHtml(cat)}" data-ripple class="category-btn ripple-container flex-shrink-0 px-4 py-2 min-h-[40px] rounded-xl border text-[12.5px] font-medium whitespace-nowrap active:scale-95 touch-press transition-all ${
+      return `<button data-category="${escapeHtml(cat)}" data-ripple class="category-btn ripple-container flex-shrink-0 px-3.5 py-1.5 min-h-[38px] rounded-xl border text-[12px] font-medium whitespace-nowrap active:scale-95 touch-press transition-all ${
         active
-          ? "bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 border-transparent text-white shadow-md shadow-indigo-500/25 font-semibold"
-          : "bg-white/[0.05] border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]"
+          ? "bg-gradient-to-r from-emerald-600 to-emerald-500 border-transparent text-white shadow-md shadow-emerald-600/30 font-semibold"
+          : "bg-white/[0.04] border-white/[0.08] text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.08]"
       }">${escapeHtml(cat)}</button>`;
     })
     .join("");
 }
 
-/* =========================================================
-   Rendering: video cards
-   ========================================================= */
 function platformBadge(url) {
   if (getYouTubeId(url)) {
-    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-rose-400 shadow-sm" title="YouTube">${icon(
+    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-rose-400 shadow-sm" title="YouTube">${icon(
       "play",
       "w-3.5 h-3.5"
     )}</span>`;
   }
-  if (getPornhubId(url) || getXvideosId(url)) {
-    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-amber-400 shadow-sm" title="Video Stream">${icon(
+  if (getPornhubId(url) || getXvideosId(url) || getSpankbangId(url) || getEpornerId(url)) {
+    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-emerald-400 shadow-sm" title="Video Stream">${icon(
       "play",
       "w-3.5 h-3.5"
     )}</span>`;
   }
   if (isDirectVideo(url)) {
-    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-purple-400 shadow-sm" title="Direct Video">${icon(
+    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-purple-400 shadow-sm" title="Direct Video">${icon(
       "film",
       "w-3.5 h-3.5"
     )}</span>`;
   }
-  return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-zinc-400 shadow-sm" title="Tautan Web">${icon(
+  return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 flex items-center justify-center text-zinc-400 shadow-sm" title="Tautan Web">${icon(
     "externalLink",
     "w-3.5 h-3.5"
   )}</span>`;
@@ -878,7 +1111,7 @@ function platformBadge(url) {
 function createVideoCardHTML(video, delayMs) {
   const thumb = video.thumbnail || FALLBACK_THUMB;
   return `
-  <article class="video-card glass-panel group relative rounded-2xl overflow-hidden active:scale-[0.98] transition-all duration-200 animate-card-in" style="animation-delay:${delayMs}ms" data-id="${video.id}" data-ripple>
+  <article class="video-card liquid-glass-card group relative rounded-2xl overflow-hidden active:scale-[0.98] transition-all duration-200 animate-card-in" style="animation-delay:${delayMs}ms" data-id="${video.id}" data-ripple>
     <div class="card-thumb relative aspect-video bg-zinc-950 overflow-hidden cursor-pointer">
       <img src="${thumb}" loading="lazy" alt="${escapeHtml(video.title)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" onerror="this.src='${ERROR_THUMB}'" />
       
@@ -890,8 +1123,8 @@ function createVideoCardHTML(video, delayMs) {
       </div>
       
       <!-- Floating Category Chip -->
-      <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-[11px] font-medium text-white/90 border border-white/10 max-w-[65%] truncate flex items-center gap-1.5 shadow-sm">
-        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0"></span>
+      <span class="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-black/70 backdrop-blur-md text-[11px] font-medium text-white/90 border border-white/10 max-w-[65%] truncate flex items-center gap-1.5 shadow-sm">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
         <span class="truncate">${escapeHtml(video.category)}</span>
       </span>
       
@@ -899,8 +1132,8 @@ function createVideoCardHTML(video, delayMs) {
       ${platformBadge(video.url)}
     </div>
 
-    <div class="p-3.5 space-y-2.5">
-      <h3 class="card-title text-[13.5px] font-semibold text-zinc-100 leading-snug line-clamp-2 cursor-pointer group-hover:text-indigo-300 transition-colors">
+    <div class="p-3.5 space-y-2">
+      <h3 class="card-title text-[13px] font-semibold text-zinc-100 leading-snug line-clamp-2 cursor-pointer group-hover:text-emerald-300 transition-colors">
         ${escapeHtml(video.title)}
       </h3>
       <div class="flex items-center justify-between pt-2 border-t border-white/[0.06]">
@@ -923,11 +1156,12 @@ function createVideoCardHTML(video, delayMs) {
 
 function updateVideoCount() {
   const n = allVideosCache.length;
+  countNavVideos.textContent = String(n);
   videoCountEl.textContent = n === 0 ? "Belum ada video" : `${n} video tersimpan`;
 }
 
 /* =========================================================
-   Sorting & filtering
+   Sorting & Filtering Videos
    ========================================================= */
 function sortVideos(videos) {
   const arr = [...videos];
@@ -964,9 +1198,6 @@ function applyFiltersAndRender() {
   renderInitial();
 }
 
-/* =========================================================
-   Pagination / infinite scroll
-   ========================================================= */
 function renderInitial() {
   loadedCount = 0;
   videoGrid.innerHTML = "";
@@ -985,7 +1216,7 @@ function renderInitial() {
     emptySearchState.classList.remove("hidden");
     scrollSentinel.classList.add("hidden");
 
-    let reason = "Kriteria pencarian Anda";
+    let reason = "kriteria pencarian Anda";
     if (searchQuery.trim() && currentCategory !== "Semua") {
       reason = `kata kunci "${searchQuery}" pada kategori "${currentCategory}"`;
     } else if (searchQuery.trim()) {
@@ -1027,7 +1258,7 @@ const io = new IntersectionObserver(
 io.observe(scrollSentinel);
 
 /* =========================================================
-   Data loading
+   Data Loading & Synchronization
    ========================================================= */
 function showSkeleton() {
   skeletonGrid.classList.remove("hidden");
@@ -1044,7 +1275,7 @@ async function reloadVideos({ skeleton = false } = {}) {
   try {
     allVideosCache = await db.videos.toArray();
   } catch (err) {
-    console.error("Gagal memuat data dari IndexedDB:", err);
+    console.error("Gagal memuat data video dari IndexedDB:", err);
     allVideosCache = [];
     showToast("Gagal memuat data lokal", "error");
   }
@@ -1054,6 +1285,170 @@ async function reloadVideos({ skeleton = false } = {}) {
   updateCategoryDatalist();
   if (skeleton) hideSkeleton();
 }
+
+/* =========================================================
+   VAULT NOTES MANAGEMENT (Catatan Pribadi In-App)
+   ========================================================= */
+function updateNotesCount() {
+  countNavNotes.textContent = String(allNotesCache.length);
+}
+
+async function reloadNotes() {
+  try {
+    allNotesCache = await db.notes.toArray();
+    allNotesCache.sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
+  } catch (err) {
+    console.error("Gagal memuat catatan dari IndexedDB:", err);
+    allNotesCache = [];
+  }
+  updateNotesCount();
+  applyNotesFilter();
+}
+
+function applyNotesFilter() {
+  const q = searchNotesQuery.toLowerCase().trim();
+  if (q === "") {
+    filteredNotes = [...allNotesCache];
+  } else {
+    filteredNotes = allNotesCache.filter(
+      (n) => (n.title && n.title.toLowerCase().includes(q)) || (n.content && n.content.toLowerCase().includes(q))
+    );
+  }
+  renderNotes();
+}
+
+function renderNotes() {
+  notesGrid.innerHTML = "";
+  if (filteredNotes.length === 0) {
+    emptyNotesState.classList.remove("hidden");
+    notesGrid.classList.add("hidden");
+    return;
+  }
+  emptyNotesState.classList.add("hidden");
+  notesGrid.classList.remove("hidden");
+
+  const html = filteredNotes
+    .map((note) => {
+      return `
+    <article class="note-card liquid-glass-card rounded-2xl p-4 flex flex-col justify-between cursor-pointer hover:border-emerald-500/40 active:scale-[0.98] transition-all space-y-3" data-id="${
+      note.id
+    }">
+      <div class="space-y-1.5">
+        <h4 class="text-sm font-bold text-white line-clamp-1">${escapeHtml(note.title || "Tanpa Judul")}</h4>
+        <p class="text-xs text-zinc-400 line-clamp-3 leading-relaxed whitespace-pre-wrap">${escapeHtml(
+          note.content || ""
+        )}</p>
+      </div>
+      <div class="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[10.5px] text-zinc-500">
+        <span>${timeAgo(note.updatedAt || note.createdAt)}</span>
+        <span class="text-emerald-400 font-medium">Buka ➜</span>
+      </div>
+    </article>`;
+    })
+    .join("");
+
+  notesGrid.innerHTML = html;
+}
+
+function openNoteModal(note = null) {
+  noteForm.reset();
+  if (note) {
+    activeEditingNoteId = note.id;
+    noteId.value = note.id;
+    noteTitleInput.value = note.title;
+    noteContentInput.value = note.content;
+    noteModalTitle.textContent = "Edit Catatan";
+    btnDeleteNote.classList.remove("hidden");
+  } else {
+    activeEditingNoteId = null;
+    noteId.value = "";
+    noteTitleInput.value = "";
+    noteContentInput.value = "";
+    noteModalTitle.textContent = "Catatan Baru";
+    btnDeleteNote.classList.add("hidden");
+  }
+
+  modalNote.classList.remove("pointer-events-none");
+  noteModalBackdrop.classList.remove("pointer-events-none");
+  requestAnimationFrame(() => {
+    noteModalBackdrop.classList.remove("opacity-0");
+    noteModalPanel.classList.remove("scale-95", "opacity-0");
+  });
+  setTimeout(() => noteTitleInput.focus(), 300);
+}
+
+function closeNoteModal() {
+  noteModalBackdrop.classList.add("opacity-0");
+  noteModalPanel.classList.add("scale-95", "opacity-0");
+  setTimeout(() => {
+    modalNote.classList.add("pointer-events-none");
+    noteModalBackdrop.classList.add("pointer-events-none");
+    noteForm.reset();
+    activeEditingNoteId = null;
+  }, 300);
+}
+
+btnNewNote.addEventListener("click", () => openNoteModal());
+btnEmptyAddNote.addEventListener("click", () => openNoteModal());
+btnCloseNoteModal.addEventListener("click", closeNoteModal);
+btnCancelNote.addEventListener("click", closeNoteModal);
+noteModalBackdrop.addEventListener("click", closeNoteModal);
+
+notesGrid.addEventListener("click", (e) => {
+  const card = e.target.closest(".note-card");
+  if (!card) return;
+  const id = Number(card.dataset.id);
+  const note = allNotesCache.find((n) => n.id === id);
+  if (note) openNoteModal(note);
+});
+
+noteForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const id = noteId.value ? Number(noteId.value) : null;
+  const payload = {
+    title: noteTitleInput.value.trim(),
+    content: noteContentInput.value.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    if (id) {
+      await db.notes.update(id, payload);
+      showToast("Catatan berhasil diperbarui!", "success");
+    } else {
+      await db.notes.add({
+        ...payload,
+        createdAt: new Date().toISOString(),
+      });
+      showToast("Catatan baru berhasil dibuat!", "success");
+    }
+    closeNoteModal();
+    await reloadNotes();
+  } catch (err) {
+    console.error(err);
+    showToast("Gagal menyimpan catatan", "error");
+  }
+});
+
+btnDeleteNote.addEventListener("click", async () => {
+  if (!activeEditingNoteId) return;
+  if (confirm("Hapus catatan ini secara permanen?")) {
+    try {
+      await db.notes.delete(activeEditingNoteId);
+      showToast("Catatan berhasil dihapus", "delete");
+      closeNoteModal();
+      await reloadNotes();
+    } catch (err) {
+      console.error(err);
+      showToast("Gagal menghapus catatan", "error");
+    }
+  }
+});
+
+searchNotesInput.addEventListener("input", (e) => {
+  searchNotesQuery = e.target.value;
+  applyNotesFilter();
+});
 
 /* =========================================================
    Event: Header / Sort
@@ -1083,13 +1478,18 @@ sortPanel.addEventListener("click", (e) => {
 });
 
 document.addEventListener("click", (e) => {
-  if (!sortPanel.classList.contains("opacity-0") && !sortPanel.contains(e.target) && e.target !== btnSort && !btnSort.contains(e.target)) {
+  if (
+    !sortPanel.classList.contains("opacity-0") &&
+    !sortPanel.contains(e.target) &&
+    e.target !== btnSort &&
+    !btnSort.contains(e.target)
+  ) {
     closeSortPanel();
   }
 });
 
 /* =========================================================
-   Event: Search & Reset
+   Event: Search & Reset Videos
    ========================================================= */
 const handleSearch = debounce(() => {
   applyFiltersAndRender();
@@ -1118,9 +1518,6 @@ btnResetFilters.addEventListener("click", () => {
   applyFiltersAndRender();
 });
 
-/* =========================================================
-   Event: Category filters (delegated)
-   ========================================================= */
 categoryFilters.addEventListener("click", (e) => {
   const btn = e.target.closest(".category-btn");
   if (!btn) return;
@@ -1130,7 +1527,7 @@ categoryFilters.addEventListener("click", (e) => {
 });
 
 /* =========================================================
-   Event: Modal open/close & Single Form submit
+   Event: Header '+' Button & Form Single Video Submit
    ========================================================= */
 btnOpenModal.addEventListener("click", () => openModal());
 btnEmptyAdd.addEventListener("click", () => openModal());
@@ -1146,7 +1543,7 @@ videoForm.addEventListener("submit", async (e) => {
     title: formTitle.value.trim(),
     url: formUrl.value.trim(),
     thumbnail: formThumbnail.value.trim(),
-    category: formCategory.value.trim(),
+    category: formCategory.value.trim() || getDomainCategory(formUrl.value.trim()),
     createdAt: new Date().toISOString(),
   };
 
@@ -1168,7 +1565,7 @@ videoForm.addEventListener("submit", async (e) => {
 });
 
 /* =========================================================
-   Event: Video grid actions (delegated)
+   Event: Video Grid Actions (Delegated)
    ========================================================= */
 videoGrid.addEventListener("click", (e) => {
   const card = e.target.closest(".video-card");
@@ -1196,7 +1593,7 @@ videoGrid.addEventListener("click", (e) => {
 });
 
 /* =========================================================
-   Event: Bottom sheet actions
+   Event: Bottom Sheet Actions
    ========================================================= */
 sheetCancelBtn.addEventListener("click", closeBottomSheet);
 sheetBackdrop.addEventListener("click", closeBottomSheet);
@@ -1239,7 +1636,7 @@ sheetDeleteBtn.addEventListener("click", async () => {
 });
 
 /* =========================================================
-   Event: Preview modal
+   Event: Preview Modal
    ========================================================= */
 btnClosePreview.addEventListener("click", closePreview);
 previewBackdrop.addEventListener("click", closePreview);
@@ -1250,13 +1647,15 @@ previewBackdrop.addEventListener("click", closePreview);
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!previewModal.classList.contains("hidden")) return closePreview();
+  if (!modalNote.classList.contains("pointer-events-none")) return closeNoteModal();
   if (!sheetBackdrop.classList.contains("pointer-events-none")) return closeBottomSheet();
   if (!modal.classList.contains("pointer-events-none")) return closeModal();
   if (!sortPanel.classList.contains("opacity-0")) return closeSortPanel();
 });
 
 /* =========================================================
-   Init
+   Initialization
    ========================================================= */
 updateSortPanelUI();
 reloadVideos({ skeleton: true });
+reloadNotes();
