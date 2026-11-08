@@ -21,25 +21,31 @@ Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa reg
 
 ## ✨ Fitur Unggulan
 
-### 🎨 1. Estetika Modern & Dark Mode Premium
+### ⚡ 1. Auto-Scraper Metadata Otomatis (CORS-Free)
+- **Auto-Fetch Judul & Thumbnail**: Cukup tempel link video, aplikasi secara cerdas mengekstrak judul asli dan cover thumbnail secara otomatis menggunakan parser **OpenGraph, Twitter Card, dan oEmbed**.
+- **Native Android CORS Bypass**: Didukung oleh plugin `@capacitor/core` (`CapacitorHttp`) yang mengeksekusi request HTTP di level native Android, memungkinkan scraping metadata dari berbagai platform video tanpa terhambat CORS.
+
+### 📑 2. Batch Link Importer & Wizard Kategorisasi Cepat
+- **Import Kumpulan Link Sekaligus**: Punya banyak link di Google Keep atau catatan teks? Cukup *copy-paste* seluruh teks catatan berisi puluhan tautan sekaligus ke tab *Import Banyak*. Sistem otomatis mendeteksi dan memisahkan setiap URL `https://...`.
+- **Sequential Step-by-Step Wizard**:
+  - Memproses link satu per satu dengan pratinjau judul & thumbnail hasil scraping instan.
+  - **1-Tap Category Pick**: Menyajikan tombol chip kategori yang langsung bisa diketuk dengan 1 jempol. Sekali ketuk, link tersimpan ke database dan layar otomatis berpindah ke link berikutnya.
+  - **Memori Kategori Cerdas**: Setiap kategori baru yang Anda buat langsung diingat dan otomatis muncul sebagai tombol pilihan pada link-link berikutnya.
+
+### 🎨 3. Estetika Modern & Dark Mode Premium
 - **Deep Zinc Palette (`#09090b`)**: Paduan latar belakang zinc gelap pekat dengan panel kartu `#121217` dan efek *ambient lighting* gradien indigo-violet yang elegan.
 - **Glassmorphism Subtle**: Sentuhan border semi-transparan beraksen *inset highlight* tipis untuk ilusi kedalaman visual yang mewah.
 - **Proporsi Card 16:9 Sinematik**: Thumbnail video proporsional dengan badge kategori mengambang (*frosted pill badge*) dan overlay tombol play interaktif saat ditekan atau disentuh.
 
-### 📱 2. Ergonomi Mobile Ramah Jempol
+### 📱 4. Ergonomi Mobile Ramah Jempol & Anti-Clipping
+- **Tombol '+' (FAB) Terproteksi Safe Area**: Jarak bawah dan samping tombol FAB telah dioptimasi (`bottom: max(2.5rem, ...)` dan `right: max(1.5rem, ...)`) sehingga tidak akan terpotong oleh sudut layar melengkung (*curved bezel*), gesture pill, maupun *3-button navigation bar* Android.
 - **Touch Target Nyaman (≥ 44×44px)**: Semua tombol aksi utama, filter, menu drop-down, dan bottom sheet mudah dijangkau dengan satu tangan tanpa salah ketuk.
-- **Dukungan Penuh Safe-Area**: Kompatibel dengan area poni/kamera cut-out (`pt-safe`) serta navigation gesture bar Android terbaru (`pb-safe`).
 - **Smooth Horizontal Category Bar**: Filter bar kategori dapat di-swipe mulus dari ujung ke ujung tanpa scrollbar yang mengganggu.
 
-### ⚡ 3. Performa Ekstrem & 100% Offline-First
-- **Tanpa Framework Berat**: Dibangun dengan **Vanilla JavaScript murni** dan Vite — waktu inisialisasi instan dan konsumsi RAM yang sangat minim.
-- **Lokal & Mandiri**: Seluruh styling Tailwind CSS dikompilasi saat build-time tanpa memuat CDN runtime eksternal. Aplikasi tetap berfungsi normal bahkan dalam mode pesawat (*airplane mode*).
-- **Dual Empty States**: Tampilan informatif khusus saat vault masih kosong maupun saat pencarian/filter tidak membuahkan hasil, lengkap dengan tombol reset instan.
-
-### 🎥 4. Pemutar & Integrasi Fleksibel
-- **YouTube Embed Player**: Pratinjau langsung video YouTube tanpa perlu keluar dari aplikasi.
-- **HTML5 Direct Player**: Pemutar bawaan untuk file `.mp4`, `.webm`, `.mov`, dan link video langsung.
-- **External Web Launcher**: Tautan fallback otomatis membuka browser eksternal untuk URL website standar.
+### 🎥 5. Pemutar Video Multi-Platform Terintegrasi
+- **Embedded Web Player**: Pratinjau langsung video dari berbagai platform video terkemuka di dalam aplikasi tanpa perlu membuka browser luar.
+- **HTML5 Direct Player**: Pemutar bawaan untuk file `.mp4`, `.webm`, `.mov`, dan link video langsung lengkap dengan kontrol pemutaran.
+- **External Web Launcher**: Tautan fallback otomatis membuka browser eksternal dalam 1 ketukan untuk URL website umum.
 
 ---
 
@@ -49,8 +55,9 @@ Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa reg
 graph TD
     A["📱 User Interface (HTML5 / Tailwind CSS v4)"] -->|Event Listeners & State| B["⚡ Vanilla JS Engine (ES Modules)"]
     B -->|Offline Storage API| C["💾 Dexie.js (IndexedDB Local)"]
-    B -->|Capacitor Bridge| D["🤖 Native Android Shell (Capacitor 6/7)"]
-    D -->|Cloud Compilation| E["☁️ GitHub Actions CI/CD (JDK 21)"]
+    B -->|CapacitorHttp CORS Bypass| D["🌐 Metadata Scraper (OpenGraph / oEmbed)"]
+    B -->|Capacitor Bridge| E["🤖 Native Android Shell (Capacitor 6/7)"]
+    E -->|Cloud Compilation| F["☁️ GitHub Actions CI/CD (JDK 21)"]
 ```
 
 | Komponen | Teknologi | Keterangan |
@@ -59,7 +66,7 @@ graph TD
 | **Bundler & Tooling** | Vite 8+ | Hot Module Replacement (HMR) & build kilat (< 1s) |
 | **Styling** | Tailwind CSS v4 | Build-time CSS lokal via `@tailwindcss/vite` |
 | **Database Lokal** | Dexie.js v4 | Pembungkus IndexedDB berkemampuan query cepat |
-| **Hybrid Bridge** | Capacitor Android | Bridge native Android untuk akses WebView mandiri |
+| **Hybrid Bridge & HTTP** | Capacitor Android + CapacitorHttp | Bridge native Android & HTTP bypass CORS |
 | **Cloud CI/CD** | GitHub Actions (JDK 21) | Otomatisasi kompilasi `.apk` di cloud |
 
 ---
@@ -77,10 +84,10 @@ video-vault/
 │       └── res/                # Ikon launcher & branding aplikasi
 ├── public/                     # Aset statis & logo
 ├── src/
-│   ├── main.js                 # Logika Dexie.js, event handler, render card & UI
+│   ├── main.js                 # Logika Dexie.js, scraper, wizard batch import & UI
 │   └── style.css               # Import Tailwind v4, safe-area & micro-animations
-├── index.html                  # Shell antarmuka, bottom sheet & modal dialog
-├── capacitor.config.json       # Konfigurasi appId: com.videovault.app
+├── index.html                  # Shell antarmuka, wizard modal, bottom sheet & player
+├── capacitor.config.json       # Konfigurasi appId & plugin CapacitorHttp
 ├── vite.config.js              # Konfigurasi bundler Vite + Tailwind
 ├── package.json                # Dependensi proyek
 ├── AGENTS.md                   # Dokumen ground-truth instruksi AI Agent

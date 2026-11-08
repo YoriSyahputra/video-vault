@@ -1,4 +1,5 @@
 import Dexie from "dexie";
+import { CapacitorHttp } from "@capacitor/core";
 
 /* =========================================================
    Database
@@ -65,16 +66,175 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString("id-ID", { day: "numeric", month: "short" });
 }
 
+/* =========================================================
+   Platform & Embed Resolvers
+   ========================================================= */
 function getYouTubeId(url) {
   if (!url) return null;
   const match = url.match(
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i
   );
   return match ? match[1] : null;
 }
 
+function getPornhubId(url) {
+  if (!url) return null;
+  const match = url.match(/pornhub\.com\/view_video\.php\?viewkey=([a-zA-Z0-9_-]+)/i);
+  return match ? match[1] : null;
+}
+
+function getXvideosId(url) {
+  if (!url) return null;
+  const match = url.match(/xvideos\.(?:com|es|net)\/(?:video([0-9]+)|video\.([a-zA-Z0-9_-]+))/i);
+  return match ? match[1] || match[2] : null;
+}
+
 function isDirectVideo(url) {
   return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url || "");
+}
+
+function resolveEmbed(url) {
+  if (!url) return { type: "none", embedUrl: null };
+  const ytId = getYouTubeId(url);
+  if (ytId) {
+    return { type: "youtube", embedUrl: `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0` };
+  }
+  const phId = getPornhubId(url);
+  if (phId) {
+    return { type: "pornhub", embedUrl: `https://www.pornhub.com/embed/${phId}` };
+  }
+  const xvId = getXvideosId(url);
+  if (xvId) {
+    return { type: "xvideos", embedUrl: `https://www.xvideos.com/embedframe/${xvId}` };
+  }
+  if (isDirectVideo(url)) {
+    return { type: "direct", embedUrl: url };
+  }
+  return { type: "fallback", embedUrl: null };
+}
+
+/* =========================================================
+   Universal Metadata Scraper
+   ========================================================= */
+function cleanTitle(rawTitle) {
+  if (!rawTitle) return "";
+  return rawTitle
+    .replace(/\s*[-–|•]\s*(?:YouTube|Pornhub(?:\.com)?|XVIDEOS(?:\.COM)?|TnaFlix|SpankBang|Vimeo|Dailymotion|TikTok).*$/i, "")
+    .replace(/^Video\s*:\s*/i, "")
+    .trim();
+}
+
+function getDomainName(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    const parts = host.split(".");
+    if (parts.length > 0) {
+      const name = parts[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+  } catch (_) {
+    /* no-op */
+  }
+  return "Web";
+}
+
+async function fetchMetadata(targetUrl) {
+  const result = {
+    title: "",
+    thumbnail: "",
+    category: getDomainName(targetUrl),
+  };
+
+  const ytId = getYouTubeId(targetUrl);
+  if (ytId) {
+    result.thumbnail = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    result.category = "YouTube";
+    try {
+      const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(targetUrl)}`);
+      const data = await res.json();
+      if (data && data.title) {
+        result.title = cleanTitle(data.title);
+      }
+    } catch (_) {
+      result.title = `YouTube Video (${ytId})`;
+    }
+    return result;
+  }
+
+  if (isDirectVideo(targetUrl)) {
+    try {
+      const fileName = new URL(targetUrl).pathname.split("/").pop() || "Direct Video";
+      result.title = decodeURIComponent(fileName).replace(/\.[^.]+$/, "");
+    } catch (_) {
+      result.title = "Direct Video";
+    }
+    result.category = "Video";
+    result.thumbnail = FALLBACK_THUMB;
+    return result;
+  }
+
+  // Scrape using CapacitorHttp (Native Android CORS bypass)
+  try {
+    const response = await CapacitorHttp.get({
+      url: targetUrl,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+    });
+
+    if (response && response.data) {
+      const htmlText = typeof response.data === "string" ? response.data : String(response.data);
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+
+      // Extract Title
+      const ogTitle =
+        doc.querySelector('meta[property="og:title"]')?.getAttribute("content") ||
+        doc.querySelector('meta[name="twitter:title"]')?.getAttribute("content") ||
+        doc.querySelector("title")?.textContent;
+      if (ogTitle) {
+        result.title = cleanTitle(ogTitle);
+      }
+
+      // Extract Thumbnail
+      const ogImage =
+        doc.querySelector('meta[property="og:image"]')?.getAttribute("content") ||
+        doc.querySelector('meta[property="og:image:url"]')?.getAttribute("content") ||
+        doc.querySelector('meta[name="twitter:image"]')?.getAttribute("content") ||
+        doc.querySelector('link[rel="image_src"]')?.getAttribute("href");
+      if (ogImage) {
+        let fullImg = ogImage.trim();
+        if (fullImg.startsWith("//")) fullImg = "https:" + fullImg;
+        else if (fullImg.startsWith("/")) {
+          try {
+            const origin = new URL(targetUrl).origin;
+            fullImg = origin + fullImg;
+          } catch (_) {
+            /* no-op */
+          }
+        }
+        result.thumbnail = fullImg;
+      }
+    }
+  } catch (err) {
+    console.warn("CapacitorHttp scrape notice:", err);
+  }
+
+  if (!result.title) {
+    try {
+      const pathSeg = new URL(targetUrl).pathname.split("/").filter(Boolean).pop();
+      result.title = pathSeg ? decodeURIComponent(pathSeg).replace(/[-_]/g, " ") : `Video dari ${result.category}`;
+    } catch (_) {
+      result.title = `Video dari ${result.category}`;
+    }
+  }
+  if (!result.thumbnail) {
+    result.thumbnail = FALLBACK_THUMB;
+  }
+
+  return result;
 }
 
 /* =========================================================
@@ -87,6 +247,12 @@ let searchQuery = "";
 let sortBy = "newest";
 let loadedCount = 0;
 let activeVideo = null;
+
+// Batch import wizard state
+let batchQueue = [];
+let batchIndex = 0;
+let sessionCategories = new Set();
+let currentActiveScraped = null;
 
 /* =========================================================
    DOM references
@@ -116,6 +282,12 @@ const modalPanel = document.getElementById("modal-panel");
 const modalTitle = document.getElementById("modal-title");
 const btnCloseModal = document.getElementById("btn-close-modal");
 const btnCancel = document.getElementById("btn-cancel");
+const modalTabs = document.getElementById("modal-tabs");
+const tabBtnSingle = document.getElementById("tab-btn-single");
+const tabBtnBatch = document.getElementById("tab-btn-batch");
+
+// Single form view elements
+const viewSingle = document.getElementById("view-single");
 const videoForm = document.getElementById("video-form");
 const formId = document.getElementById("form-id");
 const formTitle = document.getElementById("form-title");
@@ -125,7 +297,35 @@ const formCategory = document.getElementById("form-category");
 const categoryDatalist = document.getElementById("category-datalist");
 const thumbPreviewImg = document.getElementById("thumb-preview-img");
 const thumbPlaceholderIcon = document.getElementById("thumb-placeholder-icon");
+const btnFetchMeta = document.getElementById("btn-fetch-meta");
+const fetchSpinner = document.getElementById("fetch-spinner");
+const fetchIcon = document.getElementById("fetch-icon");
+const urlStatusHint = document.getElementById("url-status-hint");
 
+// Batch view elements
+const viewBatch = document.getElementById("view-batch");
+const batchTextarea = document.getElementById("batch-textarea");
+const batchCountBadge = document.getElementById("batch-count-badge");
+const btnCancelBatch = document.getElementById("btn-cancel-batch");
+const btnStartWizard = document.getElementById("btn-start-wizard");
+
+// Wizard view elements
+const viewWizard = document.getElementById("view-wizard");
+const wizardCurrIdx = document.getElementById("wizard-curr-idx");
+const wizardTotalCount = document.getElementById("wizard-total-count");
+const wizardPercent = document.getElementById("wizard-percent");
+const wizardProgressBar = document.getElementById("wizard-progress-bar");
+const wizardThumbImg = document.getElementById("wizard-thumb-img");
+const wizardLoadingOverlay = document.getElementById("wizard-loading-overlay");
+const wizardTitleText = document.getElementById("wizard-title-text");
+const wizardUrlText = document.getElementById("wizard-url-text");
+const wizardCategoryChips = document.getElementById("wizard-category-chips");
+const wizardNewCat = document.getElementById("wizard-new-cat");
+const btnWizardSaveNew = document.getElementById("btn-wizard-save-new");
+const btnWizardSkip = document.getElementById("btn-wizard-skip");
+const btnWizardFinish = document.getElementById("btn-wizard-finish");
+
+// Bottom sheet elements
 const sheetBackdrop = document.getElementById("sheet-backdrop");
 const bottomSheet = document.getElementById("bottom-sheet");
 const sheetThumb = document.getElementById("sheet-thumb");
@@ -136,6 +336,7 @@ const sheetEditBtn = document.getElementById("sheet-edit");
 const sheetDeleteBtn = document.getElementById("sheet-delete");
 const sheetCancelBtn = document.getElementById("sheet-cancel");
 
+// Preview modal elements
 const previewModal = document.getElementById("preview-modal");
 const previewBackdrop = document.getElementById("preview-backdrop");
 const previewPanel = document.getElementById("preview-panel");
@@ -195,23 +396,57 @@ function showToast(message, type = "success") {
 }
 
 /* =========================================================
-   Overlay open/close helpers
+   Overlay open/close helpers & Tab Switchers
    ========================================================= */
+function switchModalTab(tabName) {
+  if (tabName === "single") {
+    tabBtnSingle.className =
+      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm transition-all";
+    tabBtnBatch.className =
+      "py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-lg transition-all";
+    viewSingle.classList.remove("hidden");
+    viewBatch.classList.add("hidden");
+    viewWizard.classList.add("hidden");
+  } else if (tabName === "batch") {
+    tabBtnBatch.className =
+      "py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm transition-all";
+    tabBtnSingle.className =
+      "py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-lg transition-all";
+    viewBatch.classList.remove("hidden");
+    viewSingle.classList.add("hidden");
+    viewWizard.classList.add("hidden");
+    setTimeout(() => batchTextarea.focus(), 150);
+  }
+}
+
+tabBtnSingle.addEventListener("click", () => switchModalTab("single"));
+tabBtnBatch.addEventListener("click", () => switchModalTab("batch"));
+
 function openModal(editData = null) {
   videoForm.reset();
   updateCategoryDatalist();
+  urlStatusHint.textContent = "";
+
   if (editData) {
     modalTitle.textContent = "Edit Video";
+    modalTabs.classList.add("hidden");
+    viewSingle.classList.remove("hidden");
+    viewBatch.classList.add("hidden");
+    viewWizard.classList.add("hidden");
+
     formId.value = editData.id;
     formTitle.value = editData.title;
     formUrl.value = editData.url;
     formThumbnail.value = editData.thumbnail || "";
     formCategory.value = editData.category;
+    updateThumbPreview();
   } else {
     modalTitle.textContent = "Tambah Video";
+    modalTabs.classList.remove("hidden");
+    switchModalTab("single");
     formId.value = "";
+    updateThumbPreview();
   }
-  updateThumbPreview();
 
   modal.classList.remove("pointer-events-none");
   modalBackdrop.classList.remove("pointer-events-none");
@@ -219,7 +454,7 @@ function openModal(editData = null) {
     modalBackdrop.classList.remove("opacity-0");
     modalPanel.classList.remove("scale-95", "opacity-0");
   });
-  setTimeout(() => formTitle.focus({ preventScroll: true }), 300);
+  if (!editData) setTimeout(() => formUrl.focus({ preventScroll: true }), 300);
 }
 
 function closeModal() {
@@ -229,6 +464,10 @@ function closeModal() {
     modal.classList.add("pointer-events-none");
     modalBackdrop.classList.add("pointer-events-none");
     videoForm.reset();
+    batchTextarea.value = "";
+    batchQueue = [];
+    batchIndex = 0;
+    viewWizard.classList.add("hidden");
   }, 300);
 }
 
@@ -238,8 +477,8 @@ function openBottomSheet(video) {
   sheetThumb.onerror = () => (sheetThumb.src = ERROR_THUMB);
   sheetTitle.textContent = video.title;
 
-  const previewable = !!getYouTubeId(video.url) || isDirectVideo(video.url);
-  sheetPreviewBtn.classList.toggle("hidden", !previewable);
+  const embed = resolveEmbed(video.url);
+  sheetPreviewBtn.classList.toggle("hidden", embed.type === "none");
 
   sheetBackdrop.classList.remove("pointer-events-none");
   requestAnimationFrame(() => {
@@ -256,16 +495,18 @@ function closeBottomSheet() {
   }, 300);
 }
 
-function openPreview(video, ytId, isDirect) {
+function openPreview(video) {
   previewTitle.textContent = video.title;
   previewContent.classList.remove("hidden");
   previewFallback.classList.add("hidden");
 
-  if (ytId) {
-    previewContent.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0" title="${escapeHtml(
+  const embed = resolveEmbed(video.url);
+
+  if (embed.type === "youtube" || embed.type === "pornhub" || embed.type === "xvideos") {
+    previewContent.innerHTML = `<iframe class="w-full h-full" src="${embed.embedUrl}" title="${escapeHtml(
       video.title
     )}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-  } else if (isDirect) {
+  } else if (embed.type === "direct") {
     previewContent.innerHTML = `<video class="w-full h-full" src="${video.url}" controls autoplay playsinline></video>`;
   } else {
     previewContent.classList.add("hidden");
@@ -292,13 +533,12 @@ function closePreview() {
 }
 
 function openPreviewOrExternal(video) {
-  const ytId = getYouTubeId(video.url);
-  const direct = isDirectVideo(video.url);
-  if (!ytId && !direct) {
+  const embed = resolveEmbed(video.url);
+  if (embed.type === "fallback") {
     window.open(video.url, "_blank", "noopener,noreferrer");
     return;
   }
-  openPreview(video, ytId, direct);
+  openPreview(video);
 }
 
 function openSortPanel() {
@@ -344,8 +584,20 @@ async function copyLink(url, btnEl) {
 /* =========================================================
    Category datalist & thumbnail preview (form)
    ========================================================= */
+function getAllCategories() {
+  const cats = new Set(["Semua"]);
+  allVideosCache.forEach((v) => {
+    const c = (v.category || "").trim();
+    if (c) cats.add(c);
+  });
+  sessionCategories.forEach((c) => {
+    if (c) cats.add(c.trim());
+  });
+  return [...cats];
+}
+
 function updateCategoryDatalist() {
-  const categories = [...new Set(allVideosCache.map((v) => v.category.trim()).filter(Boolean))];
+  const categories = getAllCategories().filter((c) => c !== "Semua");
   categoryDatalist.innerHTML = categories.map((c) => `<option value="${escapeHtml(c)}"></option>`).join("");
 }
 
@@ -366,10 +618,223 @@ thumbPreviewImg.addEventListener("error", () => {
 });
 
 /* =========================================================
+   Single Form Auto-Scrape Handler
+   ========================================================= */
+async function handleAutoScrapeSingle() {
+  const url = formUrl.value.trim();
+  if (!url || !/^https?:\/\//i.test(url)) return;
+
+  fetchSpinner.classList.remove("hidden");
+  fetchIcon.classList.add("hidden");
+  urlStatusHint.textContent = "Mengambil data...";
+
+  try {
+    const meta = await fetchMetadata(url);
+    if (!formTitle.value.trim() && meta.title) {
+      formTitle.value = meta.title;
+    }
+    if (!formThumbnail.value.trim() && meta.thumbnail) {
+      formThumbnail.value = meta.thumbnail;
+      updateThumbPreview();
+    }
+    if (!formCategory.value.trim() && meta.category) {
+      formCategory.value = meta.category;
+    }
+    urlStatusHint.textContent = "Data terisi ✨";
+    showToast("Metadata berhasil diambil!", "success");
+  } catch (err) {
+    console.error(err);
+    urlStatusHint.textContent = "";
+  } finally {
+    fetchSpinner.classList.add("hidden");
+    fetchIcon.classList.remove("hidden");
+  }
+}
+
+btnFetchMeta.addEventListener("click", handleAutoScrapeSingle);
+formUrl.addEventListener("paste", () => {
+  setTimeout(handleAutoScrapeSingle, 100);
+});
+formUrl.addEventListener("change", () => {
+  if (!formTitle.value.trim()) handleAutoScrapeSingle();
+});
+
+/* =========================================================
+   Batch Link Extractor & Wizard Implementation
+   ========================================================= */
+function extractUrls(text) {
+  if (!text) return [];
+  const matches = text.match(/https?:\/\/[^\s"'<>\n\r]+/gi) || [];
+  return [...new Set(matches.map((u) => u.trim()))];
+}
+
+batchTextarea.addEventListener("input", () => {
+  const urls = extractUrls(batchTextarea.value);
+  batchCountBadge.textContent = `${urls.length} link terdeteksi`;
+  btnStartWizard.disabled = urls.length === 0;
+  btnStartWizard.textContent = urls.length > 0 ? `Mulai Kategorisasi (${urls.length} Link)` : "Mulai Kategorisasi";
+});
+
+btnCancelBatch.addEventListener("click", closeModal);
+
+btnStartWizard.addEventListener("click", () => {
+  const urls = extractUrls(batchTextarea.value);
+  if (urls.length === 0) return;
+
+  batchQueue = urls;
+  batchIndex = 0;
+
+  modalTabs.classList.add("hidden");
+  viewBatch.classList.add("hidden");
+  viewWizard.classList.remove("hidden");
+  modalTitle.textContent = "Kategorisasi Cepat (Wizard)";
+
+  loadWizardItem(batchIndex);
+});
+
+async function loadWizardItem(index) {
+  if (index >= batchQueue.length) {
+    // Finished all items!
+    showToast(`${batchQueue.length} video berhasil ditambahkan!`, "success");
+    closeModal();
+    await reloadVideos();
+    return;
+  }
+
+  const currentUrl = batchQueue[index];
+  const total = batchQueue.length;
+  const currentNum = index + 1;
+
+  wizardCurrIdx.textContent = String(currentNum);
+  wizardTotalCount.textContent = String(total);
+  const pct = Math.round((currentNum / total) * 100);
+  wizardPercent.textContent = `${pct}%`;
+  wizardProgressBar.style.width = `${pct}%`;
+
+  wizardUrlText.textContent = currentUrl;
+  wizardTitleText.textContent = "Mengambil judul video...";
+  wizardThumbImg.src = FALLBACK_THUMB;
+  wizardLoadingOverlay.classList.remove("hidden");
+  wizardNewCat.value = "";
+
+  // Render Category Quick Pick Chips
+  renderWizardCategoryChips();
+
+  // Scrape current link
+  try {
+    currentActiveScraped = await fetchMetadata(currentUrl);
+    wizardTitleText.textContent = currentActiveScraped.title;
+    wizardThumbImg.src = currentActiveScraped.thumbnail || FALLBACK_THUMB;
+    wizardThumbImg.onerror = () => (wizardThumbImg.src = ERROR_THUMB);
+    if (currentActiveScraped.category) {
+      sessionCategories.add(currentActiveScraped.category);
+      renderWizardCategoryChips();
+    }
+  } catch (err) {
+    console.error(err);
+    currentActiveScraped = {
+      title: currentUrl,
+      thumbnail: FALLBACK_THUMB,
+      category: "Umum",
+    };
+    wizardTitleText.textContent = currentActiveScraped.title;
+  } finally {
+    wizardLoadingOverlay.classList.add("hidden");
+  }
+}
+
+function renderWizardCategoryChips() {
+  const categories = getAllCategories().filter((c) => c !== "Semua");
+  if (categories.length === 0) {
+    wizardCategoryChips.innerHTML = `<span class="text-xs text-zinc-500 italic">Belum ada kategori. Silakan buat di bawah.</span>`;
+    return;
+  }
+
+  wizardCategoryChips.innerHTML = categories
+    .map((cat) => {
+      return `<button type="button" data-cat="${escapeHtml(
+        cat
+      )}" data-ripple class="btn-wiz-chip ripple-container px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-indigo-500/25 hover:border-indigo-500/40 border border-white/10 text-xs font-medium text-zinc-200 active:scale-95 touch-press transition">${escapeHtml(
+        cat
+      )}</button>`;
+    })
+    .join("");
+}
+
+async function saveCurrentWizardItem(category) {
+  const selectedCategory = (category || "").trim() || "Umum";
+  sessionCategories.add(selectedCategory);
+
+  const payload = {
+    title: currentActiveScraped?.title || wizardTitleText.textContent || batchQueue[batchIndex],
+    url: batchQueue[batchIndex],
+    thumbnail: currentActiveScraped?.thumbnail || "",
+    category: selectedCategory,
+    createdAt: new Date().toISOString(),
+  };
+
+  try {
+    await db.videos.add(payload);
+  } catch (err) {
+    console.error("Gagal menyimpan video wizard:", err);
+  }
+
+  // Next item with smooth animation
+  batchIndex++;
+  viewWizard.classList.remove("animate-wizard-step");
+  void viewWizard.offsetWidth; // trigger reflow
+  viewWizard.classList.add("animate-wizard-step");
+
+  loadWizardItem(batchIndex);
+}
+
+// 1-Tap Category Chip Click
+wizardCategoryChips.addEventListener("click", (e) => {
+  const chip = e.target.closest(".btn-wiz-chip");
+  if (!chip) return;
+  const cat = chip.dataset.cat;
+  saveCurrentWizardItem(cat);
+});
+
+// Save New Category Input Click
+btnWizardSaveNew.addEventListener("click", () => {
+  const newCat = wizardNewCat.value.trim();
+  if (!newCat) {
+    wizardNewCat.focus();
+    return;
+  }
+  saveCurrentWizardItem(newCat);
+});
+
+wizardNewCat.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    btnWizardSaveNew.click();
+  }
+});
+
+// Skip button
+btnWizardSkip.addEventListener("click", () => {
+  batchIndex++;
+  loadWizardItem(batchIndex);
+});
+
+// Finish / Cancel rest
+btnWizardFinish.addEventListener("click", async () => {
+  if (batchIndex > 0) {
+    showToast(`${batchIndex} video tersimpan ke vault`, "success");
+    closeModal();
+    await reloadVideos();
+  } else {
+    closeModal();
+  }
+});
+
+/* =========================================================
    Rendering: categories
    ========================================================= */
 function renderCategories() {
-  const categories = ["Semua", ...new Set(allVideosCache.map((v) => v.category.trim()).filter(Boolean))];
+  const categories = getAllCategories();
   categoryFilters.innerHTML = categories
     .map((cat) => {
       const active = currentCategory === cat;
@@ -388,6 +853,12 @@ function renderCategories() {
 function platformBadge(url) {
   if (getYouTubeId(url)) {
     return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-rose-400 shadow-sm" title="YouTube">${icon(
+      "play",
+      "w-3.5 h-3.5"
+    )}</span>`;
+  }
+  if (getPornhubId(url) || getXvideosId(url)) {
+    return `<span class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg bg-black/65 backdrop-blur-md border border-white/10 flex items-center justify-center text-amber-400 shadow-sm" title="Video Stream">${icon(
       "play",
       "w-3.5 h-3.5"
     )}</span>`;
@@ -481,12 +952,12 @@ function sortVideos(videos) {
 function applyFiltersAndRender() {
   let videos = [...allVideosCache];
   if (currentCategory !== "Semua") {
-    videos = videos.filter((v) => v.category.toLowerCase() === currentCategory.toLowerCase());
+    videos = videos.filter((v) => (v.category || "").toLowerCase() === currentCategory.toLowerCase());
   }
   if (searchQuery.trim() !== "") {
     const q = searchQuery.toLowerCase();
     videos = videos.filter(
-      (v) => v.title.toLowerCase().includes(q) || (v.url && v.url.toLowerCase().includes(q))
+      (v) => (v.title && v.title.toLowerCase().includes(q)) || (v.url && v.url.toLowerCase().includes(q))
     );
   }
   filteredVideos = sortVideos(videos);
@@ -501,7 +972,6 @@ function renderInitial() {
   videoGrid.innerHTML = "";
 
   if (allVideosCache.length === 0) {
-    // Vault is completely empty
     videoGrid.classList.add("hidden");
     emptyState.classList.remove("hidden");
     emptySearchState.classList.add("hidden");
@@ -510,7 +980,6 @@ function renderInitial() {
   }
 
   if (filteredVideos.length === 0) {
-    // Filter/search returned 0 results
     videoGrid.classList.add("hidden");
     emptyState.classList.add("hidden");
     emptySearchState.classList.remove("hidden");
@@ -582,6 +1051,7 @@ async function reloadVideos({ skeleton = false } = {}) {
   renderCategories();
   applyFiltersAndRender();
   updateVideoCount();
+  updateCategoryDatalist();
   if (skeleton) hideSkeleton();
 }
 
@@ -660,7 +1130,7 @@ categoryFilters.addEventListener("click", (e) => {
 });
 
 /* =========================================================
-   Event: Modal open/close & Form submit
+   Event: Modal open/close & Single Form submit
    ========================================================= */
 btnOpenModal.addEventListener("click", () => openModal());
 btnEmptyAdd.addEventListener("click", () => openModal());
@@ -735,9 +1205,7 @@ sheetPreviewBtn.addEventListener("click", () => {
   const video = activeVideo;
   closeBottomSheet();
   if (!video) return;
-  const ytId = getYouTubeId(video.url);
-  const direct = isDirectVideo(video.url);
-  openPreview(video, ytId, direct);
+  openPreview(video);
 });
 
 sheetCopyBtn.addEventListener("click", () => {

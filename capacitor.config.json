@@ -1,5 +1,10 @@
 {
   "appId": "com.videovault.app",
   "appName": "Video Vault",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }
