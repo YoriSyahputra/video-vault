@@ -1,10 +1,198 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #050507;
-  --color-surface: #0e0e14;
+  --color-background: #09090b;
+  --color-surface: #121217;
+  --color-surface-hover: #1c1c24;
+  --color-surface-card: #13131a;
   --color-accent: #6366f1;
   --color-accent2: #a855f7;
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Safe Area Insets for Mobile */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.fab-safe-bottom {
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Scrollbar Hiding */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Line Clamp Utilities */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Touch & Press States */
+.touch-press {
+  transition: transform 0.15s cubic-bezier(0.2, 0, 0.1, 1), opacity 0.15s ease;
+  will-change: transform;
+}
+.touch-press:active {
+  transform: scale(0.95);
+}
+
+.card-press {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0.1, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  will-change: transform;
+}
+.card-press:active {
+  transform: scale(0.98);
+}
+
+/* Subtle Glassmorphism Card Effect */
+.glass-panel {
+  background: rgba(18, 18, 23, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Ripple */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-el {
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(0);
+  animation: rippleAnim 0.5s ease-out;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+/* Card Entrance Animation */
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-card-in {
+  animation: cardIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Skeleton Loading Shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.07),
+    transparent
+  );
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Ambient Glow Blobs */
+@keyframes blobDrift1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(25px, -30px) scale(1.1);
+  }
+}
+@keyframes blobDrift2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-25px, 25px) scale(1.08);
+  }
+}
+.animate-blob-1 {
+  animation: blobDrift1 14s ease-in-out infinite;
+}
+.animate-blob-2 {
+  animation: blobDrift2 16s ease-in-out infinite;
+}
+
+/* Floating Animations */
+@keyframes floatY {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.animate-float {
+  animation: floatY 3.2s ease-in-out infinite;
+}
+
+/* FAB Slow Pulse */
+@keyframes pingSlow {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  70%, 100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.animate-ping-slow {
+  animation: pingSlow 2.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Toast */
+.toast {
+  opacity: 0;
+  transform: translateY(-12px) scale(0.96);
+  transition:
+    opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.toast-show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
