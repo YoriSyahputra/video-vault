@@ -16,7 +16,18 @@ db.version(2).stores({
 /* =========================================================
    Constants & helpers
    ========================================================= */
-const PAGE_SIZE = 8;
+const ALLOWED_PAGE_SIZES = [10, 15, 20, 30, 40, 50, 100];
+const DEFAULT_PAGE_SIZE = 15;
+
+function getStoredPageSize() {
+  try {
+    const saved = Number(localStorage.getItem("vv_page_size"));
+    return ALLOWED_PAGE_SIZES.includes(saved) ? saved : DEFAULT_PAGE_SIZE;
+  } catch (_) {
+    return DEFAULT_PAGE_SIZE;
+  }
+}
+
 const FALLBACK_THUMB = "https://placehold.co/600x340/141110/4ade80?text=Video+Vault";
 const ERROR_THUMB = "https://placehold.co/600x340/141110/71717a?text=Cover+Video";
 
@@ -352,6 +363,8 @@ let filteredVideos = [];
 let currentCategory = "Semua";
 let searchQuery = "";
 let sortBy = "newest";
+let pageSize = getStoredPageSize();
+let currentPage = 1;
 let loadedCount = 0;
 let activeVideo = null;
 
@@ -396,8 +409,17 @@ const videoCountEl = document.getElementById("video-count");
 const btnSort = document.getElementById("btn-sort");
 const sortPanel = document.getElementById("sort-panel");
 
-// Header Button '+'
+// Header Button '+' & Options
 const btnOpenModal = document.getElementById("btn-open-modal");
+const btnOpenOptions = document.getElementById("btn-open-options");
+
+// Pagination Controls
+const paginationControls = document.getElementById("pagination-controls");
+const btnPrevPage = document.getElementById("btn-prev-page");
+const btnNextPage = document.getElementById("btn-next-page");
+const currentPageNum = document.getElementById("current-page-num");
+const totalPagesNum = document.getElementById("total-pages-num");
+const paginationSummaryLabel = document.getElementById("pagination-summary-label");
 
 // Modal Add/Edit & Batch
 const modalBackdrop = document.getElementById("modal-backdrop");
@@ -430,6 +452,7 @@ const urlStatusHint = document.getElementById("url-status-hint");
 const viewBatch = document.getElementById("view-batch");
 const batchTextarea = document.getElementById("batch-textarea");
 const batchCountBadge = document.getElementById("batch-count-badge");
+const btnInstantBatch = document.getElementById("btn-instant-batch");
 const btnCancelBatch = document.getElementById("btn-cancel-batch");
 const btnStartWizard = document.getElementById("btn-start-wizard");
 
@@ -470,6 +493,20 @@ const noteTitleInput = document.getElementById("note-title-input");
 const noteContentInput = document.getElementById("note-content-input");
 const btnDeleteNote = document.getElementById("btn-delete-note");
 const btnCancelNote = document.getElementById("btn-cancel-note");
+
+// Modal Options (Pagination & JSON Backup/Restore)
+const optionsModalBackdrop = document.getElementById("options-modal-backdrop");
+const modalOptions = document.getElementById("modal-options");
+const optionsModalPanel = document.getElementById("options-modal-panel");
+const btnCloseOptionsModal = document.getElementById("btn-close-options-modal");
+const btnDoneOptions = document.getElementById("btn-done-options");
+const activePageSizeLabel = document.getElementById("active-page-size-label");
+const pageSizeChipsContainer = document.getElementById("page-size-chips");
+const btnExportJson = document.getElementById("btn-export-json");
+const inputImportJson = document.getElementById("input-import-json");
+const btnTriggerImportJson = document.getElementById("btn-trigger-import-json");
+const optStatVideos = document.getElementById("opt-stat-videos");
+const optStatNotes = document.getElementById("opt-stat-notes");
 
 // Bottom sheet elements
 const sheetBackdrop = document.getElementById("sheet-backdrop");
@@ -564,16 +601,16 @@ function switchViewMode(mode) {
   currentViewMode = mode;
   if (mode === "videos") {
     navBtnVideos.className =
-      "ripple-container flex-1 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+      "ripple-container flex-1 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-2";
     navBtnNotes.className =
-      "ripple-container flex-1 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+      "ripple-container flex-1 py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-2";
     sectionVideos.classList.remove("hidden");
     sectionNotes.classList.add("hidden");
   } else {
     navBtnNotes.className =
-      "ripple-container flex-1 py-1.5 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+      "ripple-container flex-1 py-2 text-xs font-semibold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 touch-press transition-all flex items-center justify-center gap-2";
     navBtnVideos.className =
-      "ripple-container flex-1 py-1.5 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-1.5";
+      "ripple-container flex-1 py-2 text-xs font-medium text-zinc-400 hover:text-white rounded-xl active:scale-95 touch-press transition-all flex items-center justify-center gap-2";
     sectionNotes.classList.remove("hidden");
     sectionVideos.classList.add("hidden");
     reloadNotes();
@@ -603,7 +640,6 @@ function switchModalTab(tabName) {
     viewBatch.classList.remove("hidden");
     viewSingle.classList.add("hidden");
     viewWizard.classList.add("hidden");
-    setTimeout(() => batchTextarea.focus(), 150);
   }
 }
 
@@ -642,7 +678,6 @@ function openModal(editData = null) {
     modalBackdrop.classList.remove("opacity-0");
     modalPanel.classList.remove("scale-95", "opacity-0");
   });
-  if (!editData) setTimeout(() => formUrl.focus({ preventScroll: true }), 300);
 }
 
 function closeModal() {
@@ -872,12 +907,159 @@ batchTextarea.addEventListener("input", () => {
   batchParsedNotes = parsed.notes;
 
   batchCountBadge.textContent = `${urlCount} link & ${noteLines} catatan teks`;
-  btnStartWizard.disabled = urlCount === 0 && noteLines === 0;
-  btnStartWizard.textContent =
-    urlCount > 0 ? `Mulai Kategorisasi (${urlCount} Link)` : noteLines > 0 ? "Simpan Catatan Teks" : "Mulai Kategorisasi";
+  const hasContent = urlCount > 0 || noteLines > 0;
+  btnStartWizard.disabled = !hasContent;
+  btnInstantBatch.disabled = !hasContent;
+
+  if (urlCount > 0) {
+    btnInstantBatch.innerHTML = `
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      <span>⚡ Import ${urlCount} Video Sekaligus (Instan)</span>
+    `;
+    btnStartWizard.textContent = `Review Satu-Satu (${urlCount}) ➜`;
+  } else if (noteLines > 0) {
+    btnInstantBatch.innerHTML = `
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      <span>⚡ Simpan Catatan Teks (Instan)</span>
+    `;
+    btnStartWizard.textContent = "Review Catatan";
+  } else {
+    btnInstantBatch.innerHTML = `
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+      </svg>
+      <span>⚡ Import Semua Sekaligus (Instan)</span>
+    `;
+    btnStartWizard.textContent = "Review Satu-Satu ➜";
+  }
 });
 
 btnCancelBatch.addEventListener("click", closeModal);
+
+/* =========================================================
+   Background Video Metadata Enrichment
+   ========================================================= */
+async function enrichVideosInBackground(importedItems) {
+  const itemsToEnrich = importedItems.filter((i) => i.needsEnrichment);
+  if (itemsToEnrich.length === 0) return;
+
+  for (const item of itemsToEnrich) {
+    try {
+      const match = await db.videos.where("url").equals(item.url).first();
+      if (!match) continue;
+
+      const meta = await fetchMetadata(item.url);
+      const updates = {};
+      if (meta.title && meta.title !== match.title) {
+        updates.title = meta.title;
+      }
+      if (meta.thumbnail && meta.thumbnail !== FALLBACK_THUMB) {
+        updates.thumbnail = meta.thumbnail;
+      }
+      if (meta.category && meta.category !== match.category) {
+        updates.category = meta.category;
+      }
+      updates.needsEnrichment = false;
+
+      if (Object.keys(updates).length > 0) {
+        await db.videos.update(match.id, updates);
+        const cached = allVideosCache.find((v) => v.id === match.id);
+        if (cached) Object.assign(cached, updates);
+
+        // Update DOM card if visible
+        const cardEl = document.querySelector(`.video-card[data-id="${match.id}"]`);
+        if (cardEl) {
+          if (updates.title) {
+            const titleEl = cardEl.querySelector(".card-title");
+            if (titleEl) titleEl.textContent = updates.title;
+          }
+          if (updates.thumbnail) {
+            const imgEl = cardEl.querySelector(".card-thumb img");
+            if (imgEl) imgEl.src = updates.thumbnail;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Background metadata enrichment notice:", item.url, err);
+    }
+  }
+  renderCategories();
+}
+
+/* =========================================================
+   1-Klik Instant Batch Import Handler
+   ========================================================= */
+btnInstantBatch.addEventListener("click", async () => {
+  const parsed = parseImportText(batchTextarea.value);
+  let noteSaved = false;
+
+  // Auto-Save non-URL text to Vault Notes!
+  if (parsed.notes && parsed.notes.trim()) {
+    try {
+      const firstLine = parsed.notes.split("\n")[0].substring(0, 40);
+      const title = firstLine || `Catatan Import (${new Date().toLocaleDateString("id-ID")})`;
+      await db.notes.add({
+        title: title,
+        content: parsed.notes,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      noteSaved = true;
+      await reloadNotes();
+    } catch (e) {
+      console.warn("Auto save note error:", e);
+    }
+  }
+
+  if (parsed.urls.length === 0) {
+    closeModal();
+    if (noteSaved) {
+      switchViewMode("notes");
+      showToast("Teks non-link berhasil disimpan ke Catatan!", "success");
+    }
+    return;
+  }
+
+  // Siapkan seluruh data video sekaligus tanpa menunggu scraper
+  const nowIso = new Date().toISOString();
+  const records = parsed.urls.map((url) => {
+    const domainCat = getDomainCategory(url);
+    const slugTitle = extractSlugTitle(url);
+    const initialTitle = slugTitle || `Video dari ${domainCat}`;
+    let thumb = FALLBACK_THUMB;
+    const ytId = getYouTubeId(url);
+    if (ytId) {
+      thumb = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+    }
+    sessionCategories.add(domainCat);
+    return {
+      title: initialTitle,
+      url: url,
+      thumbnail: thumb,
+      category: domainCat,
+      createdAt: nowIso,
+      needsEnrichment: !ytId && !isDirectVideo(url),
+    };
+  });
+
+  try {
+    await db.videos.bulkAdd(records);
+    closeModal();
+    const noteMsg = noteSaved ? " & teks disimpan ke Catatan" : "";
+    showToast(`⚡ ${records.length} video berhasil diimpor${noteMsg}!`, "success");
+    await reloadVideos();
+
+    // Jalankan auto-scraper di latar belakang tanpa menghambat pengguna
+    enrichVideosInBackground(records);
+  } catch (err) {
+    console.error("Gagal bulkAdd video:", err);
+    showToast("Gagal mengimpor kumpulan video", "error");
+  }
+});
 
 btnStartWizard.addEventListener("click", async () => {
   const parsed = parseImportText(batchTextarea.value);
@@ -893,7 +1075,7 @@ btnStartWizard.addEventListener("click", async () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-      showToast("Teks non-link berhasil disimpan ke 📝 Catatan!", "success");
+      showToast("Teks non-link berhasil disimpan ke Catatan!", "success");
       reloadNotes();
     } catch (e) {
       console.warn("Auto save note error:", e);
@@ -1183,7 +1365,8 @@ function sortVideos(videos) {
   return arr;
 }
 
-function applyFiltersAndRender() {
+function applyFiltersAndRender(resetPage = false) {
+  if (resetPage) currentPage = 1;
   let videos = [...allVideosCache];
   if (currentCategory !== "Semua") {
     videos = videos.filter((v) => (v.category || "").toLowerCase() === currentCategory.toLowerCase());
@@ -1199,13 +1382,13 @@ function applyFiltersAndRender() {
 }
 
 function renderInitial() {
-  loadedCount = 0;
   videoGrid.innerHTML = "";
 
   if (allVideosCache.length === 0) {
     videoGrid.classList.add("hidden");
     emptyState.classList.remove("hidden");
     emptySearchState.classList.add("hidden");
+    paginationControls.classList.add("hidden");
     scrollSentinel.classList.add("hidden");
     return;
   }
@@ -1214,6 +1397,7 @@ function renderInitial() {
     videoGrid.classList.add("hidden");
     emptyState.classList.add("hidden");
     emptySearchState.classList.remove("hidden");
+    paginationControls.classList.add("hidden");
     scrollSentinel.classList.add("hidden");
 
     let reason = "kriteria pencarian Anda";
@@ -1231,31 +1415,49 @@ function renderInitial() {
   emptyState.classList.add("hidden");
   emptySearchState.classList.add("hidden");
   videoGrid.classList.remove("hidden");
-  scrollSentinel.classList.remove("hidden");
+  scrollSentinel.classList.add("hidden");
 
-  renderNextBatch();
+  // Hitung jumlah halaman berdasarkan preferensi pageSize pengguna
+  const totalVideos = filteredVideos.length;
+  const totalPages = Math.ceil(totalVideos / pageSize) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const startIdx = (currentPage - 1) * pageSize;
+  const endIdx = startIdx + pageSize;
+  const pageItems = filteredVideos.slice(startIdx, endIdx);
+
+  const html = pageItems.map((v, i) => createVideoCardHTML(v, Math.min(i, 8) * 40)).join("");
+  videoGrid.innerHTML = html;
+
+  // Perbarui UI Pagination Controls Bar
+  paginationControls.classList.remove("hidden");
+  currentPageNum.textContent = String(currentPage);
+  totalPagesNum.textContent = String(totalPages);
+  const displayEnd = Math.min(endIdx, totalVideos);
+  paginationSummaryLabel.textContent = `Menampilkan ${startIdx + 1}-${displayEnd} dari ${totalVideos} video`;
+
+  btnPrevPage.disabled = currentPage <= 1;
+  btnNextPage.disabled = currentPage >= totalPages;
 }
 
-function renderNextBatch() {
-  const nextItems = filteredVideos.slice(loadedCount, loadedCount + PAGE_SIZE);
-  const html = nextItems.map((v, i) => createVideoCardHTML(v, Math.min(i, 8) * 50)).join("");
-  videoGrid.insertAdjacentHTML("beforeend", html);
-  loadedCount += nextItems.length;
-  loadingMore.classList.add("hidden");
-}
+// Navigasi Tombol Pagination Prev & Next
+btnPrevPage.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderInitial();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
 
-const io = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting && loadedCount < filteredVideos.length) {
-        loadingMore.classList.remove("hidden");
-        renderNextBatch();
-      }
-    });
-  },
-  { rootMargin: "200px" }
-);
-io.observe(scrollSentinel);
+btnNextPage.addEventListener("click", () => {
+  const totalPages = Math.ceil(filteredVideos.length / pageSize) || 1;
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderInitial();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
 
 /* =========================================================
    Data Loading & Synchronization
@@ -1283,6 +1485,7 @@ async function reloadVideos({ skeleton = false } = {}) {
   applyFiltersAndRender();
   updateVideoCount();
   updateCategoryDatalist();
+  updateOptionsModalStats();
   if (skeleton) hideSkeleton();
 }
 
@@ -1302,6 +1505,7 @@ async function reloadNotes() {
     allNotesCache = [];
   }
   updateNotesCount();
+  updateOptionsModalStats();
   applyNotesFilter();
 }
 
@@ -1374,7 +1578,6 @@ function openNoteModal(note = null) {
     noteModalBackdrop.classList.remove("opacity-0");
     noteModalPanel.classList.remove("scale-95", "opacity-0");
   });
-  setTimeout(() => noteTitleInput.focus(), 300);
 }
 
 function closeNoteModal() {
@@ -1492,7 +1695,7 @@ document.addEventListener("click", (e) => {
    Event: Search & Reset Videos
    ========================================================= */
 const handleSearch = debounce(() => {
-  applyFiltersAndRender();
+  applyFiltersAndRender(true);
 }, 150);
 
 searchInput.addEventListener("input", (e) => {
@@ -1505,7 +1708,7 @@ btnClearSearch.addEventListener("click", () => {
   searchInput.value = "";
   searchQuery = "";
   btnClearSearch.classList.add("hidden");
-  applyFiltersAndRender();
+  applyFiltersAndRender(true);
   searchInput.focus();
 });
 
@@ -1515,7 +1718,7 @@ btnResetFilters.addEventListener("click", () => {
   btnClearSearch.classList.add("hidden");
   currentCategory = "Semua";
   renderCategories();
-  applyFiltersAndRender();
+  applyFiltersAndRender(true);
 });
 
 categoryFilters.addEventListener("click", (e) => {
@@ -1523,7 +1726,7 @@ categoryFilters.addEventListener("click", (e) => {
   if (!btn) return;
   currentCategory = btn.dataset.category;
   renderCategories();
-  applyFiltersAndRender();
+  applyFiltersAndRender(true);
 });
 
 /* =========================================================
@@ -1642,11 +1845,150 @@ btnClosePreview.addEventListener("click", closePreview);
 previewBackdrop.addEventListener("click", closePreview);
 
 /* =========================================================
+   OPTIONS MODAL: Pagination, Stats & JSON Backup/Restore
+   ========================================================= */
+function updateOptionsModalStats() {
+  if (optStatVideos) optStatVideos.textContent = `${allVideosCache.length} video`;
+  if (optStatNotes) optStatNotes.textContent = `${allNotesCache.length} catatan`;
+  if (activePageSizeLabel) activePageSizeLabel.textContent = `${pageSize} / halaman`;
+
+  document.querySelectorAll(".btn-size-chip").forEach((btn) => {
+    const size = Number(btn.dataset.size);
+    btn.classList.toggle("active", size === pageSize);
+  });
+}
+
+function openOptionsModal() {
+  updateOptionsModalStats();
+  modalOptions.classList.remove("pointer-events-none");
+  optionsModalBackdrop.classList.remove("pointer-events-none");
+  requestAnimationFrame(() => {
+    optionsModalBackdrop.classList.remove("opacity-0");
+    optionsModalPanel.classList.remove("scale-95", "opacity-0");
+  });
+}
+
+function closeOptionsModal() {
+  optionsModalBackdrop.classList.add("opacity-0");
+  optionsModalPanel.classList.add("scale-95", "opacity-0");
+  setTimeout(() => {
+    modalOptions.classList.add("pointer-events-none");
+    optionsModalBackdrop.classList.add("pointer-events-none");
+  }, 300);
+}
+
+btnOpenOptions.addEventListener("click", openOptionsModal);
+btnCloseOptionsModal.addEventListener("click", closeOptionsModal);
+btnDoneOptions.addEventListener("click", closeOptionsModal);
+optionsModalBackdrop.addEventListener("click", closeOptionsModal);
+
+// Ganti ukuran pagination
+pageSizeChipsContainer.addEventListener("click", (e) => {
+  const chip = e.target.closest(".btn-size-chip");
+  if (!chip) return;
+  const newSize = Number(chip.dataset.size);
+  if (!ALLOWED_PAGE_SIZES.includes(newSize)) return;
+
+  pageSize = newSize;
+  try {
+    localStorage.setItem("vv_page_size", String(newSize));
+  } catch (_) {
+    /* no-op */
+  }
+  currentPage = 1;
+  updateOptionsModalStats();
+  applyFiltersAndRender(true);
+  showToast(`Tampilan diubah ke ${newSize} video per halaman`, "success");
+});
+
+// Ekspor Cadangan ke File JSON
+async function exportBackupJSON() {
+  try {
+    const videos = await db.videos.toArray();
+    const notes = await db.notes.toArray();
+
+    const backupData = {
+      app: "VideoVault",
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      summary: {
+        totalVideos: videos.length,
+        totalNotes: notes.length,
+      },
+      videos,
+      notes,
+    };
+
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `videovault-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast(`Berhasil ekspor ${videos.length} video & ${notes.length} catatan!`, "success");
+  } catch (err) {
+    console.error("Gagal export backup JSON:", err);
+    showToast("Gagal mengunduh file cadangan", "error");
+  }
+}
+
+btnExportJson.addEventListener("click", exportBackupJSON);
+
+// Pemicu Pemulihan File JSON
+btnTriggerImportJson.addEventListener("click", () => {
+  inputImportJson.value = "";
+  inputImportJson.click();
+});
+
+inputImportJson.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      const videos = Array.isArray(parsed.videos) ? parsed.videos : [];
+      const notes = Array.isArray(parsed.notes) ? parsed.notes : [];
+
+      if (videos.length === 0 && notes.length === 0) {
+        showToast("File tidak berisi data VideoVault yang valid", "error");
+        return;
+      }
+
+      if (videos.length > 0) {
+        await db.videos.bulkPut(videos);
+      }
+      if (notes.length > 0) {
+        await db.notes.bulkPut(notes);
+      }
+
+      await reloadVideos();
+      await reloadNotes();
+      updateOptionsModalStats();
+      closeOptionsModal();
+      showToast(`Berhasil memulihkan ${videos.length} video & ${notes.length} catatan!`, "success");
+    } catch (err) {
+      console.error("Gagal impor backup:", err);
+      showToast("Format JSON cadangan tidak valid atau rusak", "error");
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* =========================================================
    Global: Escape key closes topmost overlay
    ========================================================= */
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!previewModal.classList.contains("hidden")) return closePreview();
+  if (!modalOptions.classList.contains("pointer-events-none")) return closeOptionsModal();
   if (!modalNote.classList.contains("pointer-events-none")) return closeNoteModal();
   if (!sheetBackdrop.classList.contains("pointer-events-none")) return closeBottomSheet();
   if (!modal.classList.contains("pointer-events-none")) return closeModal();
@@ -1657,5 +1999,6 @@ document.addEventListener("keydown", (e) => {
    Initialization
    ========================================================= */
 updateSortPanelUI();
+updateOptionsModalStats();
 reloadVideos({ skeleton: true });
 reloadNotes();

@@ -25,30 +25,43 @@ Aplikasi ini berjalan **100% offline tanpa server backend eksternal**, tanpa reg
 ### 💎 1. Desain Apple "Liquid Glass" 1:1 & Palet Mewah
 - **Palet Stealth Mewah**: Paduan latar belakang terdalam **Deep Obsidian Onyx** (`#070709`), panel permukaan **Warm Dark Espresso/Mocha** (`#161311`), aksen kontras mencolok **Tactical Military / Army Emerald Green** (`#22c55e` / `#4ade80`), dan sentuhan **Champagne Gold**.
 - **Liquid Glassmorphism 1:1**: Efek kaca cair multi-layer ultra-soft (`backdrop-blur-28px`), rim highlight specular 1px putih tipis di tepi kartu, serta inner ambient lighting layaknya antarmuka visionOS / iOS modern.
-- **Header Action Protection**: Tombol aksi utama `+` ditempatkan elegan di **Header Navbar atas** berdampingan dengan tombol Sort, menjamin 100% bebas dari risiko terpotong batas bawah layar atau navigation gesture bar HP.
+- **Header Action Protection**: Tombol aksi utama `+`, Sort, dan Pengaturan ditempatkan elegan di **Header Navbar atas**, menjamin 100% bebas dari risiko terpotong batas bawah layar atau navigation gesture bar HP.
+- **Ikon Vektor Apple Minimalis**: Tab navigasi utama beralih dari emote menjadi ikon vektor SVG elegan standar antarmuka Apple untuk tampilan yang lebih profesional dan mewah.
+- **Bebas Glitch & Mobile Smooth**: Transisi modal dipercepat dengan akselerasi GPU hardware 3D tanpa sentakan keyboard virtual otomatis pada layar smartphone.
 
-### 🪐 2. Animasi 3D Realistic Cinematic Vault Intro
+### ⚡ 2. Import Massal Instan 1-Klik (*1-Click Instant Batch Import*)
+- **Import Tanpa Menunggu**: Tempel puluhan tautan sekaligus dari aplikasi catatan (seperti Google Keep) dan tekan **"⚡ Import Semua Sekaligus"**. Seluruh video dan catatan teks seketika tersimpan dalam hitungan milidetik tanpa perlu konfirmasi manual satu per satu.
+- **Background Metadata Enrichment**: Setelah tautan tersimpan instan, sistem secara cerdas memperkaya thumbnail dan judul asli di latar belakang tanpa mengunci atau menghambat navigasi antarmuka pengguna.
+- **Opsi Review Satu-Satu**: Tetap tersedia opsi wizard interaktif bagi pengguna yang ingin meninjau atau memodifikasi kategori link per item.
+
+### ⚙️ 3. Cadangkan & Pulihkan Data (*JSON Backup & Restore*)
+- **Menu Pengaturan & Cadangan (Options Modal)**: Tombol roda gigi di header membuka pusat kendali data lokal Anda.
+- **Ekspor Cadangan JSON**: Simpan seluruh koleksi video dan catatan ke file cadangan `.json` di penyimpanan smartphone hanya dengan satu ketukan.
+- **Pulihkan Seketika**: Pulihkan data kapan saja dari file cadangan `.json` saat memperbarui aplikasi atau beralih perangkat tanpa kehilangan data.
+
+### 📄 4. Kustomisasi Ukuran Halaman (*Dynamic Pagination*)
+- **Navigasi Halaman Ergonomis**: Pengguna dapat memilih jumlah video per halaman (**10, 15, 20, 30, 40, 50, atau 100 item**) sesuai kenyamanan.
+- **Penyimpanan Preferensi Lokal**: Pilihan ukuran halaman tersimpan otomatis di memori lokal (`localStorage`).
+- **Kontrol Halaman Ringkas**: Bilah navigasi *Prev* dan *Next* yang responsif membuat penelusuran koleksi video panjang menjadi cepat dan ringan.
+
+### 🪐 5. Animasi 3D Realistic Cinematic Vault Intro
 - **Realistic 3D Perspective**: Begitu aplikasi dibuka, pengguna disambut oleh intro 3D emblem vault holografik yang berputar dengan depth perspective (`perspective: 1200px`), sapuan cahaya metallic sheen, dan gelombang shockwave Army Emerald.
 - **Seamless Dissolve & Tap-to-Skip**: Bertransisi halus zoom-in ke dashboard utama dalam 1.8 detik, atau cukup ketuk layar kapan saja untuk masuk seketika.
 
-### 📝 3. Fitur "Vault Notes" (Catatan Pribadi In-App ala Google Keep)
-- **Modul Catatan Terintegrasi**: Tersedia navigasi segmented switch `[ 🎬 Video ]` dan `[ 📝 Catatan ]` di bagian atas aplikasi.
+### 📝 6. Fitur "Vault Notes" (Catatan Pribadi In-App ala Google Keep)
+- **Modul Catatan Terintegrasi**: Tersedia navigasi segmented switch `[ Video ]` dan `[ Catatan ]` di bagian atas aplikasi dengan ikon vektor Apple.
 - **Penyimpanan Catatan 100% Offline**: Tulis, baca, cari, edit, dan kelola catatan bebas langsung di dalam aplikasi layaknya Google Keep pribadi Anda.
 - **Auto-Capture saat Import Massal**: Saat mengimpor teks catatan yang berisi campuran link dan kalimat teks, seluruh kalimat non-link otomatis diekstrak dan disimpan sebagai catatan baru di tab Catatan!
 
-### 🧹 4. Smart Notes & Glued Links Parser
+### 🧹 7. Smart Notes & Glued Links Parser
 - **Pemisahan Link Menempel**: Menangani teks berantakan dari catatan (seperti `.https://...https://...` tanpa spasi) secara otomatis dan akurat.
 - **Pembersih Teks Menempel di URL**: Memotong teks judul yang nempel langsung di ujung slash URL dan memilahnya menjadi tautan bersih serta catatan teks pendamping.
 
-### 🌐 5. Kategori Otomatis Berdasarkan Domain Web (*Auto-Domain Category*)
-- **Deteksi Cerdas**: Aplikasi otomatis mengenali domain URL dan langsung menjadikannya kategori default tanpa perlu diketik manual (misal: tautan dari website video tertentu otomatis berkategori nama website tersebut).
+### 🌐 8. Kategori Otomatis Berdasarkan Domain Web (*Auto-Domain Category*)
+- **Deteksi Cerdas**: Aplikasi otomatis mengenali domain URL dan langsung menjadikannya kategori default tanpa perlu diketik manual.
 - **1-Tap Save di Wizard**: Kategori domain otomatis terisi dan tersorot di wizard batch; pengguna cukup 1 ketukan untuk konfirmasi simpan seketika.
 
-### ⚡ 6. Auto-Scraper Metadata (CORS-Free di Android)
-- **Ekstraksi Otomatis**: Judul asli dan cover thumbnail otomatis diambil menggunakan parser **OpenGraph, Twitter Card, dan oEmbed** via `@capacitor/core` (`CapacitorHttp`) yang menembus CORS di native Android.
-- **Smart URL Slug Fallback**: Jika suatu halaman video terblokir oleh jaringan ISP, sistem otomatis mengekstrak judul langsung dari slug path URL sehingga data video tidak pernah kosong.
-
-### 🎥 7. Pemutar Video Terintegrasi Multi-Platform
+### 🎥 9. Pemutar Video Terintegrasi Multi-Platform
 - **Universal Embedded Player**: Mendukung pemutaran iframe resmi untuk berbagai platform video terkemuka di dalam aplikasi.
 - **HTML5 Direct Player**: Pemutar video bawaan untuk file `.mp4`, `.webm`, `.mov`, dan streaming langsung.
 - **External Web Launcher**: Tautan fallback otomatis membuka browser eksternal dalam 1 ketukan untuk URL website umum.

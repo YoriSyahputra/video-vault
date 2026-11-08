@@ -66,6 +66,35 @@
   transform: scale(0.98);
 }
 
+/* Hardware accelerated modals & sheets to prevent mobile glitch/jitter */
+#modal-panel,
+#note-modal-panel,
+#options-modal-panel,
+#bottom-sheet > div,
+#preview-panel {
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Page size chip active/inactive states */
+.btn-size-chip.active {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px -2px rgba(34, 197, 94, 0.35);
+}
+.btn-size-chip:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #a1a1aa;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.btn-size-chip:not(.active):hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #f4f4f5;
+}
+
 /* =========================================================
    Apple 1:1 Liquid Glass Styling (visionOS / iOS Glassmorphism)
    ========================================================= */
